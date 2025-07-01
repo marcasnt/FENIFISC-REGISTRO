@@ -10,10 +10,20 @@ export async function GET(request: NextRequest, context: { params: { id: string 
         *,
         registrations (
           id,
+          athlete_id,
+          status,
           athletes (
+            id,
             first_name,
             last_name,
-            email
+            email,
+            status,
+            cedula,
+            categories:athlete_categories (
+              categories (
+                name
+              )
+            )
           )
         )
       `)
@@ -28,7 +38,18 @@ export async function GET(request: NextRequest, context: { params: { id: string 
     const competitionWithDetails = {
       ...competition,
       registrations_count: competition.registrations?.length || 0,
-      registered_athletes: competition.registrations?.map((r: any) => r.athletes) || [],
+      registered_athletes: competition.registrations?.map((r: any) => ({
+        id: r.athletes?.id,
+        first_name: r.athletes?.first_name,
+        last_name: r.athletes?.last_name,
+        email: r.athletes?.email,
+        status: r.athletes?.status,
+        cedula: r.athletes?.cedula,
+        categories: r.athletes?.categories?.map((c: any) => c.categories.name) || [],
+        registration_status: r.status,
+        registration_id: r.id,
+        athlete_id: r.athlete_id,
+      })) || [],
     }
 
     return NextResponse.json({ competition: competitionWithDetails })

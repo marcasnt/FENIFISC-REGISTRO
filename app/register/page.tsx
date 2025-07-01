@@ -212,6 +212,24 @@ export default function RegisterPage() {
       })
 
       if (response.ok) {
+        // Notificar a los administradores
+        try {
+          await fetch("/api/notify-admin-new-athlete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+              email: formData.email,
+              cedula: formData.cedula,
+              categories: formData.categories,
+              created_at: new Date().toISOString(),
+            }),
+          })
+        } catch (err) {
+          // No interrumpe el flujo si falla la notificación
+          console.error("Error notificando a admins:", err)
+        }
         setIsSubmitted(true)
         toast({
           title: "¡Registro exitoso!",

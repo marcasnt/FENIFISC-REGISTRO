@@ -247,7 +247,7 @@ export default function CompetitionsPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}
         <section className="text-center mb-8 sm:mb-12">
           <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-blue-200 mb-2 sm:mb-4 fade-in-up">Competencias FENIFISC</h1>
@@ -526,21 +526,21 @@ export default function CompetitionsPage() {
                   <h4 className="font-semibold text-gray-900 mb-3">Atletas Inscritos</h4>
                   <div className="max-h-40 overflow-y-auto space-y-2">
                     {selectedCompetition.registered_athletes.map((athlete, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                      <div key={index} className="flex items-center justify-between p-3 rounded bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-white">
                         <div className="flex items-center">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                            <span className="text-sm font-medium text-blue-600">
+                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/80 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-sm font-medium text-blue-600 dark:text-blue-200">
                               {athlete.first_name?.[0]}
                               {athlete.last_name?.[0]}
                             </span>
                           </div>
                           <div>
-                            <span className="font-medium">
+                            <span className="font-medium text-gray-900 dark:text-white">
                               {athlete.first_name} {athlete.last_name}
                             </span>
                           </div>
                         </div>
-                        <span className="text-sm text-gray-600">{athlete.email}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-200">{athlete.email}</span>
                       </div>
                     ))}
                   </div>

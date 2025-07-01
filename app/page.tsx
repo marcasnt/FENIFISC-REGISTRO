@@ -35,7 +35,7 @@ export default function HomePage() {
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Federación Nicaragüense de Físico Culturismo</p>
               </div>
             </div>
-            <nav className="flex flex-col gap-2 sm:flex-row sm:space-x-4 items-center">
+            <nav className="flex flex-col gap-2 sm:flex-row sm:space-x-4 items-center w-full sm:w-auto">
               <Link href="/admin">
                 <Button variant="outline" className="w-full sm:w-auto">Panel Administrativo</Button>
               </Link>
@@ -75,7 +75,7 @@ export default function HomePage() {
       <section className="py-10 sm:py-16 px-2 sm:px-4 bg-white dark:bg-gray-900">
         <div className="max-w-6xl mx-auto">
           <h3 className="text-xl sm:text-3xl font-bold text-center text-gray-900 dark:text-blue-200 mb-8 sm:mb-12 fade-in-up">Características del Sistema</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             <Card className="bg-white/30 dark:bg-gray-800/60 backdrop-blur-md text-center neon-card-hover">
               <CardHeader>
                 <Users className="w-10 h-10 sm:w-12 sm:h-12 text-blue-600 mx-auto mb-2 sm:mb-4" />

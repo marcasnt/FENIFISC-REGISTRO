@@ -53,6 +53,9 @@ import Link from "next/link"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import DashboardStats from "./DashboardStats"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useRouter } from "next/navigation"
+import { saveAs } from "file-saver"
+import * as XLSX from "xlsx"
 
 interface Athlete {
   id: string
@@ -133,6 +136,8 @@ export default function AdminPage() {
   const { toast } = useToast()
 
   const [scrolled, setScrolled] = useState(false)
+
+  const router = useRouter()
 
   useEffect(() => {
     loadData()
@@ -490,6 +495,69 @@ export default function AdminPage() {
     })
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem("fenifisc_admin")
+    router.push("/")
+  }
+
+  // Función para exportar atletas a Excel
+  const exportAthletesToExcel = () => {
+    if (!athletes.length) return;
+    const headers = [
+      "Nombre",
+      "Apellido",
+      "Email",
+      "Teléfono",
+      "Cédula",
+      "Dirección",
+      "Estado",
+      "Categorías",
+      "Fecha de Registro"
+    ];
+    const rows = athletes.map((a) => [
+      a.first_name,
+      a.last_name,
+      a.email,
+      a.phone || "",
+      a.cedula,
+      a.address || "",
+      a.status,
+      (a.categories || []).join("; "),
+      formatDate(a.created_at)
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Atletas");
+    XLSX.writeFile(wb, `atletas_fenifisc_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
+
+  // Función para exportar competencias a Excel
+  const exportCompetitionsToExcel = () => {
+    if (!competitions.length) return;
+    const headers = [
+      "Nombre",
+      "Descripción",
+      "Fecha",
+      "Ubicación",
+      "Límite de Inscripción",
+      "Máximo Inscripciones",
+      "Registrados"
+    ];
+    const rows = competitions.map((c) => [
+      c.name,
+      c.description || "",
+      formatDate(c.date),
+      c.location,
+      formatDate(c.registration_deadline),
+      c.max_registrations,
+      c.registrations_count || 0
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Competencias");
+    XLSX.writeFile(wb, `competencias_fenifisc_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -526,13 +594,10 @@ export default function AdminPage() {
               </div>
             </div>
             <nav className="flex flex-col gap-2 sm:flex-row sm:space-x-4 items-center w-full sm:w-auto">
-              <Link href="/">
-                <Button variant="outline" className="w-full sm:w-auto border-gray-300 dark:border-gray-600 dark:text-gray-100 btn-animate">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Volver al Inicio
-                </Button>
-              </Link>
               <ThemeToggle />
+              <Button variant="destructive" className="w-full sm:w-auto" onClick={handleLogout}>
+                Cerrar sesión
+              </Button>
             </nav>
           </div>
         </div>
@@ -589,14 +654,19 @@ export default function AdminPage() {
 
         {/* Tabs para alternar entre Atletas y Competencias */}
         <Tabs defaultValue="athletes" className="w-full">
-          <TabsList className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-4 w-full overflow-x-auto">
-            <TabsTrigger value="athletes">Gestión de Atletas</TabsTrigger>
-            <TabsTrigger value="competitions">Gestión de Competencias</TabsTrigger>
+          <TabsList className="mb-4 flex flex-row gap-2 w-full overflow-x-auto rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
+            <TabsTrigger value="athletes" className="flex-1 min-w-[140px] py-3 text-base rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all">Gestión de Atletas</TabsTrigger>
+            <TabsTrigger value="competitions" className="flex-1 min-w-[140px] py-3 text-base rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all">Gestión de Competencias</TabsTrigger>
           </TabsList>
 
           <TabsContent value="athletes">
             {/* Gestión de Atletas */}
-            <Card className="mb-8 bg-white/30 dark:bg-gray-800/60 backdrop-blur-md border border-white/40 dark:border-gray-700 shadow-lg w-full overflow-x-auto">
+            <div className="flex justify-end mb-2">
+              <Button variant="outline" onClick={exportAthletesToExcel} className="text-blue-700 border-blue-400">
+                Exportar Atletas (Excel)
+              </Button>
+            </div>
+            <Card className="mb-8 bg-white/30 dark:bg-gray-800/60 backdrop-blur-md border border-white/40 dark:border-gray-700 shadow-lg w-full overflow-x-auto px-2 sm:px-6 py-4">
               <CardHeader>
                 <CardTitle className="dark:text-blue-200">Gestión de Atletas</CardTitle>
                 <CardDescription>Administra las inscripciones de atletas</CardDescription>
@@ -609,40 +679,31 @@ export default function AdminPage() {
                     athletes.slice(0, 5).map((athlete) => (
                       <div
                         key={athlete.id}
-                        className="flex items-center justify-between p-4 neumorphic-select-card focus:outline-none"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 neumorphic-select-card focus:outline-none"
                       >
-                        <div className="flex-1">
-                          <h3 className="font-medium">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium truncate">
                             {athlete.first_name} {athlete.last_name}
                           </h3>
-                          <p className="text-sm text-gray-600">{athlete.email}</p>
-                          <p className="text-sm text-gray-500">Cédula: {athlete.cedula}</p>
+                          <p className="text-sm text-gray-600 truncate">{athlete.email}</p>
+                          <p className="text-sm text-gray-500 truncate">Cédula: {athlete.cedula}</p>
                           {athlete.categories && athlete.categories.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {athlete.categories.map((categoryId, index) => (
-                                <Badge key={index} variant="outline" className="bg-white/80 dark:bg-gray-800/80 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700">
+                                <Badge key={index} variant="outline" className="bg-white/80 dark:bg-gray-800/80 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700 whitespace-nowrap">
                                   {getCategoryName(categoryId)}
                                 </Badge>
                               ))}
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge
-                            variant={
-                              athlete.status === "approved"
-                                ? "default"
-                                : athlete.status === "pending"
-                                  ? "secondary"
-                                  : "destructive"
-                            }
-                          >
-                            {athlete.status === "approved"
-                              ? "Aprobado"
-                              : athlete.status === "pending"
-                                ? "Pendiente"
-                                : "Rechazado"}
-                          </Badge>
+                        <div className="flex flex-row flex-wrap items-center gap-2 mt-2 sm:mt-0">
+                          {athlete.status === "approved" && (
+                            <Badge variant="default" className="whitespace-nowrap bg-green-600 text-white border-none">Aprobado</Badge>
+                          )}
+                          {athlete.status === "rejected" && (
+                            <Badge variant="destructive" className="whitespace-nowrap bg-red-600 text-white border-none">Rechazado</Badge>
+                          )}
 
                           <Button
                             variant="outline"
@@ -725,7 +786,12 @@ export default function AdminPage() {
 
           <TabsContent value="competitions">
             {/* Gestión de Competencias */}
-            <Card>
+            <div className="flex justify-end mb-2">
+              <Button variant="outline" onClick={exportCompetitionsToExcel} className="text-blue-700 border-blue-400">
+                Exportar Competencias (Excel)
+              </Button>
+            </div>
+            <Card className="bg-white/30 dark:bg-gray-800/60 backdrop-blur-md border border-white/40 dark:border-gray-700 shadow-lg w-full overflow-x-auto px-2 sm:px-6 py-4">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
@@ -907,6 +973,7 @@ export default function AdminPage() {
               <User className="w-5 h-5" />
               Detalles del Atleta
             </DialogTitle>
+            <DialogDescription>Información detallada del atleta seleccionado.</DialogDescription>
           </DialogHeader>
           {selectedAthlete && (
             <div className="space-y-6">
@@ -1064,6 +1131,7 @@ export default function AdminPage() {
               <Trophy className="w-5 h-5" />
               Detalles de la Competencia
             </DialogTitle>
+            <DialogDescription>Información completa de la competencia seleccionada.</DialogDescription>
           </DialogHeader>
           {selectedCompetition && (
             <div className="space-y-6">
@@ -1126,14 +1194,26 @@ export default function AdminPage() {
                 <div>
                   <h4 className="font-medium mb-2">Atletas Inscritos:</h4>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {selectedCompetition.registered_athletes.map((athlete, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span>
-                          {athlete.first_name} {athlete.last_name}
-                        </span>
-                        <span className="text-sm text-gray-600">{athlete.email}</span>
-                      </div>
-                    ))}
+                    {selectedCompetition.registered_athletes.map((athlete, index) => {
+                      // Usar los datos completos del atleta directamente
+                      return (
+                        <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2 rounded bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-white">
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium text-gray-900 dark:text-white">{athlete.first_name} {athlete.last_name}</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300 ml-2">{athlete.email}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">Estado: {athlete.status}</span>
+                          </div>
+                          <div className="flex flex-row flex-wrap items-center gap-2">
+                            {athlete.status === "approved" && (
+                              <span className="inline-block px-3 py-1 rounded-full bg-green-600 text-white text-xs font-semibold">Aprobado</span>
+                            )}
+                            {athlete.status === "rejected" && (
+                              <span className="inline-block px-3 py-1 rounded-full bg-red-600 text-white text-xs font-semibold">Rechazado</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1160,6 +1240,7 @@ export default function AdminPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Editar Competencia</DialogTitle>
+            <DialogDescription>Modifique los datos de la competencia seleccionada.</DialogDescription>
             <DialogDescription>Modifique los datos de la competencia</DialogDescription>
           </DialogHeader>
           {editingCompetition && (
@@ -1247,37 +1328,37 @@ export default function AdminPage() {
               <Users className="w-5 h-5" />
               Todos los Atletas ({athletes.length})
             </DialogTitle>
+            <DialogDescription>Listado completo de atletas registrados.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {athletes.map((athlete) => (
               <div
                 key={athlete.id}
-                className="flex items-center justify-between p-4 neumorphic-select-card focus:outline-none"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 neumorphic-select-card focus:outline-none"
               >
-                <div className="flex-1">
-                  <h3 className="font-medium">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium truncate">
                     {athlete.first_name} {athlete.last_name}
                   </h3>
-                  <p className="text-sm text-gray-600">{athlete.email}</p>
-                  <p className="text-sm text-gray-500">Cédula: {athlete.cedula}</p>
-                  <p className="text-xs text-gray-400">Registrado: {formatDate(athlete.created_at)}</p>
+                  <p className="text-sm text-gray-600 truncate">{athlete.email}</p>
+                  <p className="text-sm text-gray-500 truncate">Cédula: {athlete.cedula}</p>
+                  {athlete.categories && athlete.categories.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {athlete.categories.map((categoryId, index) => (
+                        <Badge key={index} variant="outline" className="bg-white/80 dark:bg-gray-800/80 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700 whitespace-nowrap">
+                          {getCategoryName(categoryId)}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Badge
-                    variant={
-                      athlete.status === "approved"
-                        ? "default"
-                        : athlete.status === "pending"
-                          ? "secondary"
-                          : "destructive"
-                    }
-                  >
-                    {athlete.status === "approved"
-                      ? "Aprobado"
-                      : athlete.status === "pending"
-                        ? "Pendiente"
-                        : "Rechazado"}
-                  </Badge>
+                <div className="flex flex-row flex-wrap items-center gap-2 mt-2 sm:mt-0">
+                  {athlete.status === "approved" && (
+                    <Badge variant="default" className="whitespace-nowrap bg-green-600 text-white border-none">Aprobado</Badge>
+                  )}
+                  {athlete.status === "rejected" && (
+                    <Badge variant="destructive" className="whitespace-nowrap bg-red-600 text-white border-none">Rechazado</Badge>
+                  )}
 
                   <Button
                     variant="outline"
@@ -1296,7 +1377,7 @@ export default function AdminPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleApproveAthlete(athlete.id)}
-                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50 btn-animate"
                       >
                         <UserCheck className="w-4 h-4" />
                       </Button>
@@ -1304,12 +1385,43 @@ export default function AdminPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleRejectAthlete(athlete.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 btn-animate"
                       >
                         <UserX className="w-4 h-4" />
                       </Button>
                     </>
                   )}
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent btn-animate"
+                        title="Eliminar atleta"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar atleta?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. Se eliminará permanentemente el atleta{" "}
+                          {athlete.first_name} {athlete.last_name} y todos sus datos asociados.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteAthlete(athlete.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Eliminar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             ))}
@@ -1325,6 +1437,7 @@ export default function AdminPage() {
               <Trophy className="w-5 h-5" />
               Todas las Competencias ({competitions.length})
             </DialogTitle>
+            <DialogDescription>Listado completo de competencias creadas.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {competitions.map((competition) => (
