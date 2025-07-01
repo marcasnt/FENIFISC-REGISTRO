@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
+  const params = await context.params;
   try {
     const { data: competition, error } = await supabase
       .from("competitions")
@@ -36,7 +37,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, context: { params: { id: string } }) {
+  const params = await context.params;
   try {
     const body = await request.json()
     const { name, description, date, location, registration_deadline, max_registrations } = body
@@ -73,7 +75,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, context: { params: { id: string } }) {
+  const params = await context.params;
   try {
     // Delete related registrations first
     await supabase.from("registrations").delete().eq("competition_id", params.id)

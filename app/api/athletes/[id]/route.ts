@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
+  const params = await context.params;
   try {
     const { data: athlete, error } = await supabase
       .from("athletes")
@@ -41,7 +42,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, context: { params: { id: string } }) {
+  const params = await context.params;
   try {
     const body = await request.json()
     const { status, firstName, lastName, email, phone, cedula, address } = body
@@ -79,7 +81,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, context: { params: { id: string } }) {
+  const params = await context.params;
   try {
     // Get athlete data first to delete associated files
     const { data: athlete } = await supabase

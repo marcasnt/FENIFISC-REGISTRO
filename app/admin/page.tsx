@@ -52,6 +52,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import DashboardStats from "./DashboardStats"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface Athlete {
   id: string
@@ -85,6 +86,27 @@ interface Competition {
 }
 
 export default function AdminPage() {
+  const categoryNames: { [key: string]: string } = {
+    "bodybuilding-65": "Bodybuilding hasta 65kg",
+    "bodybuilding-70": "Bodybuilding hasta 70kg",
+    "bodybuilding-75": "Bodybuilding hasta 75kg",
+    "bodybuilding-80": "Bodybuilding hasta 80kg",
+    "bodybuilding-85": "Bodybuilding hasta 85kg",
+    "bodybuilding-85plus": "Bodybuilding más de 85kg",
+    "mens-physique-174": "Men's Physique hasta 1.74m",
+    "mens-physique-174plus": "Men's Physique más de 1.74m",
+    "fisico-clasico-171": "Físico Clásico hasta 1.71m",
+    "fisico-clasico-171plus": "Físico Clásico más de 1.71m",
+    "classic-physique-171": "Classic Physique hasta 1.71m",
+    "classic-physique-171plus": "Classic Physique más de 1.71m",
+    "womens-physique": "Women's Physique",
+    "bikini-alta": "Bikini Categoría Alta",
+    "bikini-baja": "Bikini Categoría Baja",
+    "body-fitness-alta": "Body Fitness Categoría Alta",
+    "body-fitness-baja": "Body Fitness Categoría Baja",
+    wellness: "Wellness",
+  }
+
   const [athletes, setAthletes] = useState<Athlete[]>([])
   const [competitions, setCompetitions] = useState<Competition[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -110,30 +132,16 @@ export default function AdminPage() {
 
   const { toast } = useToast()
 
-  // Mapeo de categorías para mostrar nombres legibles
-  const categoryNames: { [key: string]: string } = {
-    "bodybuilding-65": "Bodybuilding hasta 65kg",
-    "bodybuilding-70": "Bodybuilding hasta 70kg",
-    "bodybuilding-75": "Bodybuilding hasta 75kg",
-    "bodybuilding-80": "Bodybuilding hasta 80kg",
-    "bodybuilding-85": "Bodybuilding hasta 85kg",
-    "bodybuilding-85plus": "Bodybuilding más de 85kg",
-    "mens-physique-174": "Men's Physique hasta 1.74m",
-    "mens-physique-174plus": "Men's Physique más de 1.74m",
-    "fisico-clasico-171": "Físico Clásico hasta 1.71m",
-    "fisico-clasico-171plus": "Físico Clásico más de 1.71m",
-    "classic-physique-171": "Classic Physique hasta 1.71m",
-    "classic-physique-171plus": "Classic Physique más de 1.71m",
-    "womens-physique": "Women's Physique",
-    "bikini-alta": "Bikini Categoría Alta",
-    "bikini-baja": "Bikini Categoría Baja",
-    "body-fitness-alta": "Body Fitness Categoría Alta",
-    "body-fitness-baja": "Body Fitness Categoría Baja",
-    wellness: "Wellness",
-  }
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     loadData()
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10)
+    window.addEventListener("scroll", onScroll)
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   const loadData = async () => {
@@ -499,77 +507,80 @@ export default function AdminPage() {
   const daysUntilNext = getDaysUntilNextCompetition()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground dark:bg-gradient-dark">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className={`bg-white dark:bg-gray-900 border-b sticky top-0 z-50 transition-shadow ${scrolled ? "shadow-lg" : "shadow-sm"} fade-in-up`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <Image
                 src="/images/fenifisc-logo.webp"
                 alt="FENIFISC Logo"
-                width={50}
-                height={50}
-                className="rounded-lg"
+                width={120}
+                height={105}
+                className="rounded-lg sm:w-[120px] sm:h-[105px] w-[80px] h-[70px] neon-logo-hover"
               />
-              <div>
-                <h1 className="text-xl font-bold text-blue-900">FENIFISC</h1>
-                <p className="text-sm text-gray-600">Panel Administrativo</p>
+              <div className="text-center sm:text-left">
+                <h1 className="text-lg sm:text-xl font-bold text-blue-900 dark:text-blue-400 fade-in-up">FENIFISC</h1>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Panel Administrativo</p>
               </div>
             </div>
-            <Link href="/">
-              <Button variant="outline">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Volver al Inicio
-              </Button>
-            </Link>
+            <nav className="flex flex-col gap-2 sm:flex-row sm:space-x-4 items-center">
+              <Link href="/">
+                <Button variant="outline" className="w-full sm:w-auto border-gray-300 dark:border-gray-600 dark:text-gray-100 btn-animate">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Volver al Inicio
+                </Button>
+              </Link>
+              <ThemeToggle />
+            </nav>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8">
         {/* Dashboard de estadísticas */}
         <DashboardStats athletes={athletes} categoryNames={categoryNames} />
         {/* Estadísticas - Tarjetas clickeables */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
           <Card
-            className="cursor-pointer hover:shadow-lg transition-shadow hover:bg-gray-50"
+            className="cursor-pointer neumorphic-select-card focus:outline-none"
             onClick={() => setShowAllAthletesDialog(true)}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Atletas</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-900 dark:text-blue-200">Total Atletas</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{athletes.length}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-gray-900 dark:text-blue-200">{athletes.length}</div>
+              <p className="text-xs text-muted-foreground dark:text-gray-300">
                 {pendingAthletes.length} pendientes • {approvedAthletes.length} aprobados
               </p>
             </CardContent>
           </Card>
 
           <Card
-            className="cursor-pointer hover:shadow-lg transition-shadow hover:bg-gray-50"
+            className="cursor-pointer neumorphic-select-card focus:outline-none"
             onClick={() => setShowAllCompetitionsDialog(true)}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Competencias</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-900 dark:text-blue-200">Total Competencias</CardTitle>
               <Trophy className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{competitions.length}</div>
-              <p className="text-xs text-muted-foreground">Competencias anunciadas</p>
+              <div className="text-2xl font-bold text-gray-900 dark:text-blue-200">{competitions.length}</div>
+              <p className="text-xs text-muted-foreground dark:text-gray-300">Competencias anunciadas</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="neumorphic-select-card focus:outline-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Próxima Competencia</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-900 dark:text-blue-200">Próxima Competencia</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{daysUntilNext !== null ? `${daysUntilNext} días` : "N/A"}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-gray-900 dark:text-blue-200">{daysUntilNext !== null ? `${daysUntilNext} días` : "N/A"}</div>
+              <p className="text-xs text-muted-foreground dark:text-gray-300">
                 {nextCompetition ? nextCompetition.name : "No hay competencias programadas"}
               </p>
             </CardContent>
@@ -578,16 +589,16 @@ export default function AdminPage() {
 
         {/* Tabs para alternar entre Atletas y Competencias */}
         <Tabs defaultValue="athletes" className="w-full">
-          <TabsList className="mb-4">
+          <TabsList className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-4">
             <TabsTrigger value="athletes">Gestión de Atletas</TabsTrigger>
             <TabsTrigger value="competitions">Gestión de Competencias</TabsTrigger>
           </TabsList>
 
           <TabsContent value="athletes">
             {/* Gestión de Atletas */}
-            <Card className="mb-8">
+            <Card className="mb-8 bg-white/30 dark:bg-gray-800/60 backdrop-blur-md border border-white/40 dark:border-gray-700 shadow-lg">
               <CardHeader>
-                <CardTitle>Gestión de Atletas</CardTitle>
+                <CardTitle className="dark:text-blue-200">Gestión de Atletas</CardTitle>
                 <CardDescription>Administra las inscripciones de atletas</CardDescription>
               </CardHeader>
               <CardContent>
@@ -598,7 +609,7 @@ export default function AdminPage() {
                     athletes.slice(0, 5).map((athlete) => (
                       <div
                         key={athlete.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                        className="flex items-center justify-between p-4 neumorphic-select-card focus:outline-none"
                       >
                         <div className="flex-1">
                           <h3 className="font-medium">
@@ -609,7 +620,7 @@ export default function AdminPage() {
                           {athlete.categories && athlete.categories.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {athlete.categories.map((categoryId, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
+                                <Badge key={index} variant="outline" className="bg-white/80 dark:bg-gray-800/80 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700">
                                   {getCategoryName(categoryId)}
                                 </Badge>
                               ))}
@@ -638,6 +649,7 @@ export default function AdminPage() {
                             size="sm"
                             onClick={() => handleViewAthleteDetails(athlete)}
                             title="Ver detalles"
+                            className="btn-animate"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -648,7 +660,7 @@ export default function AdminPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleApproveAthlete(athlete.id)}
-                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50 btn-animate"
                                 title="Aprobar atleta"
                               >
                                 <UserCheck className="w-4 h-4" />
@@ -657,7 +669,7 @@ export default function AdminPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleRejectAthlete(athlete.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 btn-animate"
                                 title="Rechazar atleta"
                               >
                                 <UserX className="w-4 h-4" />
@@ -670,7 +682,7 @@ export default function AdminPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent btn-animate"
                                 title="Eliminar atleta"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -717,7 +729,7 @@ export default function AdminPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Gestión de Competencias</CardTitle>
+                    <CardTitle className="dark:text-blue-200">Gestión de Competencias</CardTitle>
                     <CardDescription>Administra las competencias de FENIFISC</CardDescription>
                   </div>
                   <Dialog open={showNewCompetitionDialog} onOpenChange={setShowNewCompetitionDialog}>
@@ -810,7 +822,7 @@ export default function AdminPage() {
                     competitions.slice(0, 5).map((competition) => (
                       <div
                         key={competition.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                        className="flex items-center justify-between p-4 neumorphic-select-card focus:outline-none"
                       >
                         <div className="flex-1">
                           <h3 className="font-medium">{competition.name}</h3>
@@ -889,7 +901,7 @@ export default function AdminPage() {
 
       {/* Modal: Detalles del Atleta */}
       <Dialog open={showAthleteDetailsDialog} onOpenChange={setShowAthleteDetailsDialog}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-900/95 text-gray-900 dark:text-gray-100">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <User className="w-5 h-5" />
@@ -963,7 +975,7 @@ export default function AdminPage() {
                   <h4 className="font-medium mb-2">Categorías:</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedAthlete.categories.map((categoryId, index) => (
-                      <Badge key={index} variant="outline">
+                      <Badge key={index} variant="outline" className="bg-white/80 dark:bg-gray-800/80 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700">
                         {getCategoryName(categoryId)}
                       </Badge>
                     ))}
@@ -977,7 +989,7 @@ export default function AdminPage() {
                   <h4 className="font-medium mb-2">Competencias Inscritas:</h4>
                   <div className="space-y-2">
                     {selectedAthlete.competitions.map((comp, index) => (
-                      <div key={index} className="p-2 bg-gray-50 rounded">
+                      <div key={index} className="p-2 bg-gray-50 dark:bg-gray-800/70 rounded text-gray-900 dark:text-gray-100">
                         <span className="font-medium">{comp.name}</span>
                         <span className="text-sm text-gray-600 ml-2">{formatDate(comp.date)}</span>
                       </div>
@@ -990,30 +1002,26 @@ export default function AdminPage() {
               <div>
                 <h4 className="font-medium mb-2">Documentos:</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {selectedAthlete.cedula_front_url && (
-                    <div>
-                      <p className="text-sm font-medium mb-2">Cédula (Frontal):</p>
-                      <Image
-                        src={selectedAthlete.cedula_front_url || "/placeholder.svg"}
-                        alt="Cédula frontal"
-                        width={200}
-                        height={120}
-                        className="border rounded"
-                      />
-                    </div>
-                  )}
-                  {selectedAthlete.cedula_back_url && (
-                    <div>
-                      <p className="text-sm font-medium mb-2">Cédula (Posterior):</p>
-                      <Image
-                        src={selectedAthlete.cedula_back_url || "/placeholder.svg"}
-                        alt="Cédula posterior"
-                        width={200}
-                        height={120}
-                        className="border rounded"
-                      />
-                    </div>
-                  )}
+                  <div>
+                    <p className="text-sm font-medium mb-2">Cédula (Frontal):</p>
+                    <Image
+                      src={selectedAthlete.cedula_front_url || "/placeholder.svg"}
+                      alt="Cédula frontal"
+                      width={200}
+                      height={120}
+                      className="border rounded bg-white dark:bg-gray-800"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium mb-2">Cédula (Posterior):</p>
+                    <Image
+                      src={selectedAthlete.cedula_back_url || "/placeholder.svg"}
+                      alt="Cédula posterior"
+                      width={200}
+                      height={120}
+                      className="border rounded bg-white dark:bg-gray-800"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1050,7 +1058,7 @@ export default function AdminPage() {
 
       {/* Modal: Detalles de la Competencia */}
       <Dialog open={showCompetitionDetailsDialog} onOpenChange={setShowCompetitionDetailsDialog}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-900/95 text-gray-900 dark:text-gray-100">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Trophy className="w-5 h-5" />
@@ -1239,20 +1247,12 @@ export default function AdminPage() {
               <Users className="w-5 h-5" />
               Todos los Atletas ({athletes.length})
             </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-4 top-4"
-              onClick={() => setShowAllAthletesDialog(false)}
-            >
-              <X className="w-4 h-4" />
-            </Button>
           </DialogHeader>
           <div className="space-y-4">
             {athletes.map((athlete) => (
               <div
                 key={athlete.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-between p-4 neumorphic-select-card focus:outline-none"
               >
                 <div className="flex-1">
                   <h3 className="font-medium">
@@ -1325,20 +1325,12 @@ export default function AdminPage() {
               <Trophy className="w-5 h-5" />
               Todas las Competencias ({competitions.length})
             </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-4 top-4"
-              onClick={() => setShowAllCompetitionsDialog(false)}
-            >
-              <X className="w-4 h-4" />
-            </Button>
           </DialogHeader>
           <div className="space-y-4">
             {competitions.map((competition) => (
               <div
                 key={competition.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-between p-4 neumorphic-select-card focus:outline-none"
               >
                 <div className="flex-1">
                   <h3 className="font-medium">{competition.name}</h3>

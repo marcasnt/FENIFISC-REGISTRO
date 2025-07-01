@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Calendar, MapPin, Users, Trophy, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface Competition {
   id: string
@@ -49,6 +50,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const { toast } = useToast()
+  const [scrolled, setScrolled] = useState(false)
 
   // Categorías oficiales de FENIFISC según IFBB
   const categories = {
@@ -110,6 +112,12 @@ export default function RegisterPage() {
 
   useEffect(() => {
     loadCompetitions()
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10)
+    window.addEventListener("scroll", onScroll)
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   const loadCompetitions = async () => {
@@ -227,7 +235,7 @@ export default function RegisterPage() {
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md bg-white/30 backdrop-blur-md border border-white/40 shadow-lg">
           <CardHeader className="text-center">
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <Trophy className="w-8 h-8 text-green-600" />
@@ -255,39 +263,42 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
+    <div className="min-h-screen bg-background text-foreground dark:bg-gradient-dark">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className={`bg-white dark:bg-gray-900 border-b sticky top-0 z-50 transition-shadow ${scrolled ? "shadow-lg" : "shadow-sm"} fade-in-up`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <Image
                 src="/images/fenifisc-logo.webp"
                 alt="FENIFISC Logo"
-                width={50}
-                height={50}
-                className="rounded-lg"
+                width={120}
+                height={105}
+                className="rounded-lg sm:w-[120px] sm:h-[105px] w-[80px] h-[70px] neon-logo-hover"
               />
-              <div>
-                <h1 className="text-xl font-bold text-blue-900">FENIFISC</h1>
-                <p className="text-sm text-gray-600">Registro de Atletas</p>
+              <div className="text-center sm:text-left">
+                <h1 className="text-lg sm:text-xl font-bold text-blue-900 dark:text-blue-400">FENIFISC</h1>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Registro de Atletas</p>
               </div>
             </div>
-            <Link href="/">
-              <Button variant="outline">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Volver al Inicio
-              </Button>
-            </Link>
+            <nav className="flex flex-col gap-2 sm:flex-row sm:space-x-4 items-center">
+              <Link href="/">
+                <Button variant="outline" className="w-full sm:w-auto border-gray-300 dark:border-gray-600 dark:text-gray-100 btn-animate">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Volver al Inicio
+                </Button>
+              </Link>
+              <ThemeToggle />
+            </nav>
           </div>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <Card>
+      <div className="max-w-4xl mx-auto px-2 sm:px-4 py-8">
+        <Card className="bg-white/30 dark:bg-gray-900/95 backdrop-blur-md border border-white/40 dark:border-gray-700 shadow-lg">
           <CardHeader>
-            <CardTitle>Registro de Atleta</CardTitle>
-            <CardDescription>
+            <CardTitle className="fade-in-up">Registro de Atleta</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-300">
               Complete el formulario para registrarse en las competencias de FENIFISC. Todos los campos marcados con *
               son obligatorios.
             </CardDescription>
@@ -296,8 +307,8 @@ export default function RegisterPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Información Personal */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Información Personal</h3>
-                <div className="grid md:grid-cols-2 gap-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Información Personal</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">Nombre *</Label>
                     <Input
@@ -306,6 +317,7 @@ export default function RegisterPage() {
                       onChange={(e) => setFormData((prev) => ({ ...prev, firstName: e.target.value }))}
                       placeholder="Su nombre"
                       required
+                      className="bg-white dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                     />
                   </div>
                   <div className="space-y-2">
@@ -316,6 +328,7 @@ export default function RegisterPage() {
                       onChange={(e) => setFormData((prev) => ({ ...prev, lastName: e.target.value }))}
                       placeholder="Su apellido"
                       required
+                      className="bg-white dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                     />
                   </div>
                   <div className="space-y-2">
@@ -327,6 +340,7 @@ export default function RegisterPage() {
                       onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                       placeholder="su.email@ejemplo.com"
                       required
+                      className="bg-white dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                     />
                   </div>
                   <div className="space-y-2">
@@ -336,6 +350,7 @@ export default function RegisterPage() {
                       value={formData.phone}
                       onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
                       placeholder="+505 8888-8888"
+                      className="bg-white dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                     />
                   </div>
                   <div className="space-y-2">
@@ -346,6 +361,7 @@ export default function RegisterPage() {
                       onChange={(e) => setFormData((prev) => ({ ...prev, cedula: e.target.value }))}
                       placeholder="000-000000-0000X"
                       required
+                      className="bg-white dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                     />
                   </div>
                 </div>
@@ -357,40 +373,45 @@ export default function RegisterPage() {
                     onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
                     placeholder="Su dirección completa"
                     rows={3}
+                    className="bg-white dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                   />
                 </div>
               </div>
 
               {/* Documentos de Identidad */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Documentos de Identidad</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Documentos de Identidad</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="cedulaFront">Cédula (Frente)</Label>
-                    <Input
-                      id="cedulaFront"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange("cedulaFront", e.target.files?.[0] || null)}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    />
+                    <div className="bg-white/70 dark:bg-gray-800/70 border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex items-center gap-4 mb-2">
+                      <Input
+                        id="cedulaFront"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileChange("cedulaFront", e.target.files?.[0] || null)}
+                        className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200 dark:hover:file:bg-blue-800"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cedulaBack">Cédula (Reverso)</Label>
-                    <Input
-                      id="cedulaBack"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange("cedulaBack", e.target.files?.[0] || null)}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    />
+                    <div className="bg-white/70 dark:bg-gray-800/70 border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex items-center gap-4 mb-2">
+                      <Input
+                        id="cedulaBack"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileChange("cedulaBack", e.target.files?.[0] || null)}
+                        className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200 dark:hover:file:bg-blue-800"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Categorías */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Categorías a Participar *</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-blue-200">Categorías a Participar *</h3>
                 <p className="text-sm text-gray-600">
                   Seleccione las categorías en las que desea participar según los reglamentos de la IFBB.
                 </p>
@@ -402,7 +423,7 @@ export default function RegisterPage() {
                     {categories.male.map((category) => (
                       <div
                         key={category.id}
-                        className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-blue-50 transition-colors"
+                        className="flex items-start space-x-3 p-3 neumorphic-select-card focus:outline-none"
                       >
                         <Checkbox
                           id={category.id}
@@ -427,7 +448,7 @@ export default function RegisterPage() {
                     {categories.female.map((category) => (
                       <div
                         key={category.id}
-                        className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-pink-50 transition-colors"
+                        className="flex items-start space-x-3 p-3 neumorphic-select-card neumorphic-select-card-pink focus:outline-none"
                       >
                         <Checkbox
                           id={category.id}
@@ -455,7 +476,7 @@ export default function RegisterPage() {
 
               {/* Competencias */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Competencias Disponibles *</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-blue-200">Competencias Disponibles *</h3>
                 <p className="text-sm text-gray-600">Seleccione las competencias en las que desea participar.</p>
 
                 {competitions.length === 0 ? (
@@ -468,7 +489,7 @@ export default function RegisterPage() {
                     {competitions.map((competition) => (
                       <div
                         key={competition.id}
-                        className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                        className="flex items-start space-x-3 p-4 neumorphic-select-card focus:outline-none"
                       >
                         <Checkbox
                           id={competition.id}
@@ -508,7 +529,7 @@ export default function RegisterPage() {
 
               {/* Resumen de Selección */}
               {(formData.categories.length > 0 || formData.competitions.length > 0) && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="bg-blue-50 dark:bg-blue-900/70 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                   <h4 className="font-medium text-blue-900 mb-2">Resumen de su selección:</h4>
                   {formData.categories.length > 0 && (
                     <div className="mb-2">
@@ -527,12 +548,12 @@ export default function RegisterPage() {
                   )}
                   {formData.competitions.length > 0 && (
                     <div>
-                      <p className="text-sm font-medium text-blue-800">Competencias seleccionadas:</p>
+                      <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Competencias seleccionadas:</p>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {formData.competitions.map((competitionId) => {
                           const competition = competitions.find((c) => c.id === competitionId)
                           return (
-                            <Badge key={competitionId} variant="outline" className="text-xs">
+                            <Badge key={competitionId} variant="outline" className="text-xs bg-white/80 dark:bg-gray-800/80 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700">
                               {competition?.name || competitionId}
                             </Badge>
                           )
@@ -544,8 +565,8 @@ export default function RegisterPage() {
               )}
 
               {/* Botón de Envío */}
-              <div className="flex justify-end">
-                <Button type="submit" disabled={isLoading} className="px-8">
+              <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
+                <Button type="submit" disabled={isLoading} className="w-full sm:w-auto px-8 btn-animate">
                   {isLoading ? "Procesando..." : "Registrar Atleta"}
                 </Button>
               </div>

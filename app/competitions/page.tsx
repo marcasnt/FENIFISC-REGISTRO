@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Calendar, MapPin, Users, Trophy, Clock, Eye, UserPlus, ArrowLeft } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface Competition {
   id: string
@@ -38,6 +39,7 @@ export default function CompetitionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showDetailsDialog, setShowDetailsDialog] = useState(false)
   const { toast } = useToast()
+  const [scrolled, setScrolled] = useState(false)
 
   // Mapeo de categorías para mostrar nombres legibles
   const categoryNames: { [key: string]: string } = {
@@ -63,6 +65,12 @@ export default function CompetitionsPage() {
 
   useEffect(() => {
     loadData()
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10)
+    window.addEventListener("scroll", onScroll)
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   const loadData = async () => {
@@ -158,16 +166,16 @@ export default function CompetitionsPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b">
+        <header className={`bg-white border-b sticky top-0 z-50 transition-shadow ${scrolled ? "shadow-lg" : "shadow-sm"}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <Image
                   src="/images/fenifisc-logo.webp"
                   alt="FENIFISC Logo"
-                  width={50}
-                  height={50}
-                  className="rounded-lg"
+                  width={120}
+                  height={105}
+                  className="rounded-lg sm:w-[120px] sm:h-[105px] w-[80px] h-[70px] neon-logo-hover"
                 />
                 <div>
                   <h1 className="text-xl font-bold text-blue-900">FENIFISC</h1>
@@ -208,53 +216,56 @@ export default function CompetitionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground dark:bg-gradient-dark">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className={`bg-white dark:bg-gray-900 border-b sticky top-0 z-50 transition-shadow ${scrolled ? "shadow-lg" : "shadow-sm"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <Image
                 src="/images/fenifisc-logo.webp"
                 alt="FENIFISC Logo"
-                width={50}
-                height={50}
-                className="rounded-lg"
+                width={120}
+                height={105}
+                className="rounded-lg sm:w-[120px] sm:h-[105px] w-[80px] h-[70px] neon-logo-hover"
               />
-              <div>
-                <h1 className="text-xl font-bold text-blue-900">FENIFISC</h1>
-                <p className="text-sm text-gray-600">Competencias</p>
+              <div className="text-center sm:text-left">
+                <h1 className="text-lg sm:text-xl font-bold text-blue-900 dark:text-blue-400 fade-in-up">FENIFISC</h1>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Competencias</p>
               </div>
             </div>
-            <Link href="/">
-              <Button variant="outline">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Volver al Inicio
-              </Button>
-            </Link>
+            <nav className="flex flex-col gap-2 sm:flex-row sm:space-x-4 items-center">
+              <Link href="/">
+                <Button variant="outline" className="w-full sm:w-auto border-gray-300 dark:border-gray-600 dark:text-gray-100 btn-animate">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Volver al Inicio
+                </Button>
+              </Link>
+              <ThemeToggle />
+            </nav>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Competencias FENIFISC</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+        <section className="text-center mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-blue-200 mb-2 sm:mb-4 fade-in-up">Competencias FENIFISC</h1>
+          <p className="text-base sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             Descubre las próximas competencias de fisicoculturismo y fitness. Inscríbete y demuestra tu dedicación y
             talento.
           </p>
-        </div>
+        </section>
 
         {/* Competitions Grid */}
         {competitions.length === 0 ? (
-          <div className="text-center py-12">
-            <Trophy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No hay competencias disponibles</h3>
-            <p className="text-gray-600">Las próximas competencias se anunciarán pronto.</p>
+          <div className="text-center py-8 sm:py-12">
+            <Trophy className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-blue-200 mb-2">No hay competencias disponibles</h3>
+            <p className="text-gray-600 dark:text-gray-300">Las próximas competencias se anunciarán pronto.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {competitions.map((competition) => {
               const status = getCompetitionStatus(competition)
               const daysUntilDeadline = getDaysUntilDeadline(competition.registration_deadline)
@@ -265,29 +276,29 @@ export default function CompetitionsPage() {
               return (
                 <Card
                   key={competition.id}
-                  className="hover:shadow-lg transition-shadow duration-300 cursor-pointer group"
+                  className="neumorphic-select-card group text-center focus:outline-none"
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
+                      <CardTitle className="text-lg group-hover:text-blue-600 transition-colors text-gray-900 dark:text-blue-200">
                         {competition.name}
                       </CardTitle>
                       <Badge className={status.color}>{status.label}</Badge>
                     </div>
-                    <CardDescription className="line-clamp-2">{competition.description}</CardDescription>
+                    <CardDescription className="line-clamp-2 text-gray-600 dark:text-gray-300">{competition.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {/* Información básica */}
                     <div className="space-y-2">
-                      <div className="flex items-center text-sm text-gray-600">
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
                         <Calendar className="w-4 h-4 mr-2" />
                         {formatDate(competition.date)}
                       </div>
-                      <div className="flex items-center text-sm text-gray-600">
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
                         <MapPin className="w-4 h-4 mr-2" />
                         {competition.location}
                       </div>
-                      <div className="flex items-center text-sm text-gray-600">
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
                         <Clock className="w-4 h-4 mr-2" />
                         Inscripciones hasta: {formatDate(competition.registration_deadline)}
                       </div>
@@ -295,7 +306,7 @@ export default function CompetitionsPage() {
 
                     {/* Contador de días */}
                     {status.status === "open" && daysUntilDeadline > 0 && (
-                      <div className="bg-blue-50 p-3 rounded-lg">
+                      <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
                         <div className="text-center">
                           <div className="text-2xl font-bold text-blue-600">{daysUntilDeadline}</div>
                           <div className="text-sm text-blue-600">
@@ -316,7 +327,7 @@ export default function CompetitionsPage() {
                           {competition.registrations_count || 0} / {competition.max_registrations}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
                           className={`h-2 rounded-full transition-all duration-300 ${
                             registrationProgress >= 90
@@ -329,7 +340,7 @@ export default function CompetitionsPage() {
                         ></div>
                       </div>
                       {registrationProgress >= 90 && (
-                        <p className="text-xs text-red-600 font-medium">¡Últimos cupos disponibles!</p>
+                        <p className="text-xs text-red-600 dark:text-red-400 font-medium">¡Últimos cupos disponibles!</p>
                       )}
                     </div>
 
@@ -339,14 +350,14 @@ export default function CompetitionsPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleViewDetails(competition)}
-                        className="flex-1"
+                        className="flex-1 border-gray-300 dark:border-gray-600 dark:text-gray-100"
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         Ver Más Detalles
                       </Button>
                       {status.status === "open" && (
                         <Link href="/register" className="flex-1">
-                          <Button size="sm" className="w-full">
+                          <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white btn-animate">
                             <UserPlus className="w-4 h-4 mr-2" />
                             Inscribirse
                           </Button>
@@ -363,7 +374,7 @@ export default function CompetitionsPage() {
 
       {/* Modal de Detalles */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-full sm:max-w-4xl max-h-[80vh] overflow-y-auto p-2 sm:p-6 bg-white dark:bg-gray-900/95 text-gray-900 dark:text-gray-100">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Trophy className="w-5 h-5" />
@@ -409,13 +420,13 @@ export default function CompetitionsPage() {
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-2">Estadísticas de Inscripción</h4>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-center p-4 bg-blue-50 dark:bg-blue-800/80 rounded-lg">
                         <div className="text-2xl font-bold text-blue-600">
                           {selectedCompetition.registrations_count || 0}
                         </div>
                         <div className="text-sm text-blue-600">Atletas Inscritos</div>
                       </div>
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="text-center p-4 bg-green-50 dark:bg-green-800/80 rounded-lg">
                         <div className="text-2xl font-bold text-green-600">
                           {selectedCompetition.max_registrations - (selectedCompetition.registrations_count || 0)}
                         </div>
@@ -475,7 +486,7 @@ export default function CompetitionsPage() {
                             key.includes("classic-physique"),
                         )
                         .map(([key, name]) => (
-                          <div key={key} className="flex items-center p-2 bg-blue-50 rounded text-sm">
+                          <div key={key} className="flex items-center p-2 bg-blue-50 dark:bg-blue-900/80 rounded text-sm">
                             <Trophy className="w-4 h-4 mr-2 text-blue-500" />
                             {name}
                           </div>
@@ -499,7 +510,7 @@ export default function CompetitionsPage() {
                             key.includes("wellness"),
                         )
                         .map(([key, name]) => (
-                          <div key={key} className="flex items-center p-2 bg-pink-50 rounded text-sm">
+                          <div key={key} className="flex items-center p-2 bg-pink-50 dark:bg-pink-900/80 rounded text-sm">
                             <Trophy className="w-4 h-4 mr-2 text-pink-500" />
                             {name}
                           </div>

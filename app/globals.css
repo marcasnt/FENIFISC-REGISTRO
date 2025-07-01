@@ -10,6 +10,91 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  .neumorphic-select-card {
+    @apply rounded-lg border border-transparent bg-white/60 dark:bg-gray-800/60 shadow-[0_2px_12px_0_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_0_rgba(0,0,0,0.25)] transition-all duration-200;
+  }
+  .neumorphic-select-card:hover,
+  .neumorphic-select-card:focus,
+  .neumorphic-select-card:focus-visible {
+    @apply border-blue-600 dark:border-blue-400 ring-2 ring-blue-200 dark:ring-blue-700 bg-white/80 dark:bg-gray-900/80 shadow-lg;
+    outline: none;
+  }
+  .neumorphic-select-card-pink:hover,
+  .neumorphic-select-card-pink:focus,
+  .neumorphic-select-card-pink:focus-visible {
+    @apply border-pink-600 dark:border-pink-400 ring-2 ring-pink-200 dark:ring-pink-700 bg-white/80 dark:bg-gray-900/80 shadow-lg;
+    outline: none;
+  }
+  .neon-title {
+    @apply relative font-bold text-blue-600 dark:text-blue-400;
+    text-shadow: 0 0 8px #3b82f6, 0 0 16px #60a5fa, 0 0 24px #2563eb;
+  }
+  .dark .neon-title {
+    text-shadow: 0 0 8px #60a5fa, 0 0 16px #3b82f6, 0 0 24px #1e40af;
+  }
+  .neon-card {
+    @apply border-2 border-blue-400 dark:border-blue-500 shadow-lg transition-all duration-300;
+    box-shadow: 0 0 12px 2px #3b82f6, 0 0 32px 4px #60a5fa;
+    animation: neon-flicker 1.8s infinite alternate;
+  }
+  .dark .neon-card {
+    box-shadow: 0 0 16px 2px #60a5fa, 0 0 32px 8px #1e40af;
+    border-color: #60a5fa;
+  }
+  .neon-card-hover {
+    @apply border-2 border-transparent transition-all duration-300;
+    position: relative;
+    z-index: 0;
+  }
+  .neon-card-hover:hover,
+  .neon-card-hover:focus,
+  .neon-card-hover:focus-visible {
+    @apply border-blue-400 dark:border-blue-500;
+    box-shadow: 0 0 12px 2px #3b82f6, 0 0 32px 4px #60a5fa;
+    z-index: 1;
+  }
+  .dark .neon-card-hover:hover,
+  .dark .neon-card-hover:focus,
+  .dark .neon-card-hover:focus-visible {
+    box-shadow: 0 0 16px 2px #60a5fa, 0 0 32px 8px #1e40af;
+    border-color: #60a5fa;
+  }
+  /* Animación de entrada fade-in y slide-up */
+  .fade-in-up {
+    opacity: 0;
+    transform: translateY(24px);
+    animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+  }
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Microinteracción: escala en hover/click para botones */
+  .btn-animate {
+    transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.15s;
+  }
+  .btn-animate:hover {
+    transform: scale(1.045);
+    box-shadow: 0 4px 16px 0 rgba(59,130,246,0.10);
+  }
+  .btn-animate:active {
+    transform: scale(0.97);
+  }
+
+  /* Gradiente de fondo para dark mode */
+  .dark .bg-gradient-dark {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #172554 100%);
+  }
+}
+
+@keyframes neon-flicker {
+  0%, 100% { filter: brightness(1.1); }
+  45% { filter: brightness(1.3) drop-shadow(0 0 6px #3b82f6); }
+  55% { filter: brightness(0.9); }
+  70% { filter: brightness(1.2) drop-shadow(0 0 12px #60a5fa); }
 }
 
 @layer base {
