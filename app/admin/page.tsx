@@ -510,22 +510,22 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background text-foreground dark:bg-gradient-dark">
       {/* Header */}
       <header className={`bg-white dark:bg-gray-900 border-b sticky top-0 z-50 transition-shadow ${scrolled ? "shadow-lg" : "shadow-sm"} fade-in-up`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full">
               <Image
                 src="/images/fenifisc-logo.webp"
                 alt="FENIFISC Logo"
                 width={120}
                 height={105}
-                className="rounded-lg sm:w-[120px] sm:h-[105px] w-[80px] h-[70px] neon-logo-hover"
+                className="rounded-lg sm:w-[120px] sm:h-[105px] w-[80px] h-[70px] neon-logo-hover mx-auto sm:mx-0"
               />
-              <div className="text-center sm:text-left">
+              <div className="text-center sm:text-left w-full">
                 <h1 className="text-lg sm:text-xl font-bold text-blue-900 dark:text-blue-400 fade-in-up">FENIFISC</h1>
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Panel Administrativo</p>
               </div>
             </div>
-            <nav className="flex flex-col gap-2 sm:flex-row sm:space-x-4 items-center">
+            <nav className="flex flex-col gap-2 sm:flex-row sm:space-x-4 items-center w-full sm:w-auto">
               <Link href="/">
                 <Button variant="outline" className="w-full sm:w-auto border-gray-300 dark:border-gray-600 dark:text-gray-100 btn-animate">
                   <ArrowLeft className="w-4 h-4 mr-2" />
@@ -538,13 +538,13 @@ export default function AdminPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8 w-full">
         {/* Dashboard de estadísticas */}
         <DashboardStats athletes={athletes} categoryNames={categoryNames} />
         {/* Estadísticas - Tarjetas clickeables */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 w-full">
           <Card
-            className="cursor-pointer neumorphic-select-card focus:outline-none"
+            className="cursor-pointer neumorphic-select-card focus:outline-none w-full"
             onClick={() => setShowAllAthletesDialog(true)}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -560,7 +560,7 @@ export default function AdminPage() {
           </Card>
 
           <Card
-            className="cursor-pointer neumorphic-select-card focus:outline-none"
+            className="cursor-pointer neumorphic-select-card focus:outline-none w-full"
             onClick={() => setShowAllCompetitionsDialog(true)}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -573,7 +573,7 @@ export default function AdminPage() {
             </CardContent>
           </Card>
 
-          <Card className="neumorphic-select-card focus:outline-none">
+          <Card className="neumorphic-select-card focus:outline-none w-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-900 dark:text-blue-200">Próxima Competencia</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -589,14 +589,14 @@ export default function AdminPage() {
 
         {/* Tabs para alternar entre Atletas y Competencias */}
         <Tabs defaultValue="athletes" className="w-full">
-          <TabsList className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-4">
+          <TabsList className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-4 w-full overflow-x-auto">
             <TabsTrigger value="athletes">Gestión de Atletas</TabsTrigger>
             <TabsTrigger value="competitions">Gestión de Competencias</TabsTrigger>
           </TabsList>
 
           <TabsContent value="athletes">
             {/* Gestión de Atletas */}
-            <Card className="mb-8 bg-white/30 dark:bg-gray-800/60 backdrop-blur-md border border-white/40 dark:border-gray-700 shadow-lg">
+            <Card className="mb-8 bg-white/30 dark:bg-gray-800/60 backdrop-blur-md border border-white/40 dark:border-gray-700 shadow-lg w-full overflow-x-auto">
               <CardHeader>
                 <CardTitle className="dark:text-blue-200">Gestión de Atletas</CardTitle>
                 <CardDescription>Administra las inscripciones de atletas</CardDescription>
