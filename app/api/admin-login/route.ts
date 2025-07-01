@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
+    console.log('LOGIN_ATTEMPT', { email, password });
     if (!email || !password) {
       return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
     }
@@ -16,12 +17,15 @@ export async function POST(req: Request) {
       .eq("email", email)
       .single();
 
+    console.log('ADMIN_FOUND', { admin, error });
+
     if (error || !admin) {
       return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 });
     }
 
     // Comparar password
     const valid = await bcrypt.compare(password, admin.password_hash);
+    console.log('PASSWORD_COMPARE', { password, hash: admin.password_hash, valid });
     if (!valid) {
       return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 });
     }
