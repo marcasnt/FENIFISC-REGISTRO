@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 
 export async function GET(request: NextRequest, context: { params: { id: string } }) {
   const params = await context.params;
   try {
-    const { data: athlete, error } = await supabase
+    const { data: athlete, error } = await supabaseAdmin
       .from("athletes")
       .select(`
         *,
@@ -66,7 +66,7 @@ export async function PUT(request: NextRequest, context: { params: { id: string 
     if (cedula) updateData.cedula = cedula;
     if (address) updateData.address = address;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("athletes")
       .update(updateData)
       .eq("id", params.id)
@@ -94,7 +94,7 @@ export async function DELETE(request: NextRequest, context: { params: { id: stri
   const params = await context.params;
   try {
     // Get athlete data first to delete associated files
-    const { data: athlete } = await supabase
+    const { data: athlete } = await supabaseAdmin
       .from("athletes")
       .select("cedula_front_url, cedula_back_url")
       .eq("id", params.id)
@@ -104,23 +104,23 @@ export async function DELETE(request: NextRequest, context: { params: { id: stri
     if (athlete?.cedula_front_url) {
       const frontFileName = athlete.cedula_front_url.split("/").pop()
       if (frontFileName) {
-        await supabase.storage.from("athlete-documents").remove([frontFileName])
+        await supabaseAdmin.storage.from("athlete-documents").remove([frontFileName])
       }
     }
 
     if (athlete?.cedula_back_url) {
       const backFileName = athlete.cedula_back_url.split("/").pop()
       if (backFileName) {
-        await supabase.storage.from("athlete-documents").remove([backFileName])
+        await supabaseAdmin.storage.from("athlete-documents").remove([backFileName])
       }
     }
 
     // Delete related records first
-    await supabase.from("athlete_categories").delete().eq("athlete_id", params.id)
-    await supabase.from("registrations").delete().eq("athlete_id", params.id)
+    await supabaseAdmin.from("athlete_categories").delete().eq("athlete_id", params.id)
+    await supabaseAdmin.from("registrations").delete().eq("athlete_id", params.id)
 
     // Then delete the athlete
-    const { error } = await supabase.from("athletes").delete().eq("id", params.id)
+    const { error } = await supabaseAdmin.from("athletes").delete().eq("id", params.id)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
