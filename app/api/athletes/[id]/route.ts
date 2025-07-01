@@ -45,39 +45,45 @@ export async function GET(request: NextRequest, context: { params: { id: string 
 export async function PUT(request: NextRequest, context: { params: { id: string } }) {
   const params = await context.params;
   try {
-    const body = await request.json()
-    const { status, firstName, lastName, email, phone, cedula, address } = body
+    const body = await request.json();
+    console.log('PUT /api/athletes/[id] BODY:', body);
+    const { status, firstName, lastName, email, phone, cedula, address } = body;
+
+    if (!status && !firstName && !lastName && !email && !phone && !cedula && !address) {
+      return NextResponse.json({ error: "No se proporcionaron campos para actualizar" }, { status: 400 });
+    }
 
     const updateData: any = {
       updated_at: new Date().toISOString(),
-    }
+    };
 
     // Add fields that are provided
-    if (status) updateData.status = status
-    if (firstName) updateData.first_name = firstName
-    if (lastName) updateData.last_name = lastName
-    if (email) updateData.email = email
-    if (phone) updateData.phone = phone
-    if (cedula) updateData.cedula = cedula
-    if (address) updateData.address = address
+    if (status) updateData.status = status;
+    if (firstName) updateData.first_name = firstName;
+    if (lastName) updateData.last_name = lastName;
+    if (email) updateData.email = email;
+    if (phone) updateData.phone = phone;
+    if (cedula) updateData.cedula = cedula;
+    if (address) updateData.address = address;
 
     const { data: athlete, error } = await supabase
       .from("athletes")
       .update(updateData)
       .eq("id", params.id)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     return NextResponse.json({
       message: "Athlete updated successfully",
       athlete,
-    })
+    });
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error('PUT /api/athletes/[id] ERROR:', error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
