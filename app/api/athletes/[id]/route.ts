@@ -66,20 +66,23 @@ export async function PUT(request: NextRequest, context: { params: { id: string 
     if (cedula) updateData.cedula = cedula;
     if (address) updateData.address = address;
 
-    const { data: athlete, error } = await supabase
+    const { data, error } = await supabase
       .from("athletes")
       .update(updateData)
       .eq("id", params.id)
-      .select()
-      .single();
+      .select();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    if (!data || data.length === 0) {
+      return NextResponse.json({ error: "No se encontró el atleta para actualizar" }, { status: 404 });
+    }
+
     return NextResponse.json({
       message: "Athlete updated successfully",
-      athlete,
+      athlete: data[0],
     });
   } catch (error) {
     console.error('PUT /api/athletes/[id] ERROR:', error);
