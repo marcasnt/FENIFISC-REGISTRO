@@ -431,10 +431,9 @@ export default function RegisterPage() {
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setIsLoading(true);
     try {
       // Validaciones básicas
       if (!formData.firstName || !formData.lastName || !formData.email || !formData.cedula) {
@@ -465,66 +464,54 @@ export default function RegisterPage() {
       }
 
       // Crear FormData para envío con archivos
-      const submitData = new FormData()
-      submitData.append("firstName", formData.firstName)
-      submitData.append("lastName", formData.lastName)
-      submitData.append("email", formData.email)
-      submitData.append("phone", formData.phone)
-      submitData.append("cedula", formData.cedula)
-      submitData.append("address", formData.address)
-      submitData.append("categories", JSON.stringify(formData.categories))
-      submitData.append("competitions", JSON.stringify(formData.competitions))
-
-      if (formData.cedulaFront) {
-        submitData.append("cedulaFront", formData.cedulaFront)
-      }
-      if (formData.cedulaBack) {
-        submitData.append("cedulaBack", formData.cedulaBack)
-      }
+      const submitData = new FormData();
+      submitData.append("firstName", formData.firstName);
+      submitData.append("lastName", formData.lastName);
+      submitData.append("email", formData.email);
+      submitData.append("phone", formData.phone);
+      submitData.append("cedula", formData.cedula);
+      submitData.append("address", formData.address);
+      submitData.append("categories", JSON.stringify(formData.categories));
+      submitData.append("competitions", JSON.stringify(formData.competitions));
+      submitData.append("cedulaFront", formData.cedulaFront);
+      submitData.append("cedulaBack", formData.cedulaBack);
 
       const response = await fetch("/api/athletes", {
         method: "POST",
         body: submitData,
-      })
+      });
 
-      if (response.ok) {
-        // Notificar a los administradores
-        try {
-          await fetch("/api/notify-admin-new-athlete", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              first_name: formData.firstName,
-              last_name: formData.lastName,
-              email: formData.email,
-              cedula: formData.cedula,
-              categories: formData.categories,
-              created_at: new Date().toISOString(),
-            }),
-          })
-        } catch (err) {
-          // No interrumpe el flujo si falla la notificación
-          console.error("Error notificando a admins:", err)
+      if (!response.ok) {
+        const errorData = await response.json();
+        let errorMsg = "Ocurrió un error al registrar. Intente de nuevo.";
+        if (errorData.error && errorData.error.includes("athletes_cedula_key")) {
+          errorMsg = "Error: La cédula ya está registrada.";
         }
-        setIsSubmitted(true)
         toast({
-          title: "¡Registro exitoso!",
-          description: "Su inscripción ha sido enviada y está pendiente de aprobación",
-        })
-      } else {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Error al registrar atleta")
+          title: "Error",
+          description: errorMsg,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
       }
+
+      // Si todo sale bien
+      setIsSubmitted(true);
+      toast({
+        title: "Registro exitoso",
+        description: "¡Te has registrado correctamente!",
+      });
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Error al procesar el registro",
+        description: "Ocurrió un error inesperado. Intenta de nuevo.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (isSubmitted) {
     return (
