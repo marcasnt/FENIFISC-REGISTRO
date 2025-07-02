@@ -35,61 +35,251 @@ interface Category {
 
 // Paso 1: Información personal
 function StepPersonalInfo({ formData, setFormData, onNext }: any) {
-  // ...campos de información personal...
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData((prev: any) => ({ ...prev, [id]: value }));
+  };
+  const isValid = formData.firstName && formData.lastName && formData.email && formData.cedula;
   return (
-    <div>
-      {/* Aquí van los inputs de nombre, apellido, email, etc. */}
-      <Button onClick={onNext}>Siguiente</Button>
-    </div>
-  )
+    <form className="space-y-4" onSubmit={e => { e.preventDefault(); if (isValid) onNext(); }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="firstName">Nombre *</Label>
+          <Input
+            id="firstName"
+            value={formData.firstName}
+            onChange={handleChange}
+            placeholder="Su nombre"
+            required
+            className="bg-white dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Apellido *</Label>
+          <Input
+            id="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            placeholder="Su apellido"
+            required
+            className="bg-white dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email *</Label>
+          <Input
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="su.email@ejemplo.com"
+            required
+            className="bg-white dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="phone">Teléfono</Label>
+          <Input
+            id="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            placeholder="+505 8888-8888"
+            className="bg-white dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cedula">Cédula de Identidad *</Label>
+          <Input
+            id="cedula"
+            value={formData.cedula}
+            onChange={handleChange}
+            placeholder="000-000000-0000X"
+            required
+            className="bg-white dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+          />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="address">Dirección</Label>
+        <Textarea
+          id="address"
+          value={formData.address}
+          onChange={handleChange}
+          placeholder="Su dirección completa"
+          rows={3}
+          className="bg-white dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+        />
+      </div>
+      <div className="flex justify-end pt-2">
+        <Button type="submit" disabled={!isValid} className="w-full sm:w-auto px-8 btn-animate">
+          Siguiente
+        </Button>
+      </div>
+    </form>
+  );
 }
 
 // Paso 2: Subida de documentos
 function StepDocuments({ formData, setFormData, onNext, onBack }: any) {
-  // ...inputs para subir documentos...
+  const handleFileChange = (field: "cedulaFront" | "cedulaBack", file: File | null) => {
+    setFormData((prev: any) => ({ ...prev, [field]: file }));
+  };
+  const isValid = formData.cedulaFront && formData.cedulaBack;
   return (
-    <div>
-      {/* Inputs para cedulaFront y cedulaBack */}
-      <Button onClick={onBack}>Atrás</Button>
-      <Button onClick={onNext}>Siguiente</Button>
-    </div>
-  )
+    <form className="space-y-4" onSubmit={e => { e.preventDefault(); if (isValid) onNext(); }}>
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="cedulaFront">Cédula (Frente) *</Label>
+          <Input
+            id="cedulaFront"
+            type="file"
+            accept="image/*"
+            onChange={e => handleFileChange("cedulaFront", e.target.files?.[0] || null)}
+            required
+            className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200 dark:hover:file:bg-blue-800"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cedulaBack">Cédula (Reverso) *</Label>
+          <Input
+            id="cedulaBack"
+            type="file"
+            accept="image/*"
+            onChange={e => handleFileChange("cedulaBack", e.target.files?.[0] || null)}
+            required
+            className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200 dark:hover:file:bg-blue-800"
+          />
+        </div>
+      </div>
+      <div className="flex justify-between pt-2 gap-2">
+        <Button type="button" variant="outline" onClick={onBack} className="w-full sm:w-auto">Atrás</Button>
+        <Button type="submit" disabled={!isValid} className="w-full sm:w-auto px-8 btn-animate">Siguiente</Button>
+      </div>
+    </form>
+  );
 }
 
 // Paso 3: Selección de categoría
 function StepCategory({ formData, setFormData, onNext, onBack, categories }: any) {
-  // ...checkboxes de categorías...
+  const handleCategoryChange = (categoryId: string, checked: boolean) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      categories: checked ? [...prev.categories, categoryId] : prev.categories.filter((id: string) => id !== categoryId),
+    }));
+  };
+  const isValid = formData.categories && formData.categories.length > 0;
   return (
-    <div>
-      {/* Listado de categorías */}
-      <Button onClick={onBack}>Atrás</Button>
-      <Button onClick={onNext}>Siguiente</Button>
-    </div>
-  )
+    <form className="space-y-4" onSubmit={e => { e.preventDefault(); if (isValid) onNext(); }}>
+      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Categorías a Participar *</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h4 className="font-medium text-blue-800 border-b border-blue-200 pb-1 mb-2">CATEGORÍAS MASCULINAS</h4>
+          <div className="space-y-2">
+            {categories.male.map((category: any) => (
+              <div key={category.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={category.id}
+                  checked={formData.categories.includes(category.id)}
+                  onCheckedChange={checked => handleCategoryChange(category.id, checked as boolean)}
+                />
+                <Label htmlFor={category.id} className="text-sm font-medium cursor-pointer">{category.name}</Label>
+                <span className="text-xs text-gray-500">{category.description}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h4 className="font-medium text-pink-800 border-b border-pink-200 pb-1 mb-2">CATEGORÍAS FEMENINAS</h4>
+          <div className="space-y-2">
+            {categories.female.map((category: any) => (
+              <div key={category.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={category.id}
+                  checked={formData.categories.includes(category.id)}
+                  onCheckedChange={checked => handleCategoryChange(category.id, checked as boolean)}
+                />
+                <Label htmlFor={category.id} className="text-sm font-medium cursor-pointer">{category.name}</Label>
+                <span className="text-xs text-gray-500">{category.description}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="flex justify-between pt-2 gap-2">
+        <Button type="button" variant="outline" onClick={onBack} className="w-full sm:w-auto">Atrás</Button>
+        <Button type="submit" disabled={!isValid} className="w-full sm:w-auto px-8 btn-animate">Siguiente</Button>
+      </div>
+    </form>
+  );
 }
 
 // Paso 4: Selección de competencia
 function StepCompetition({ formData, setFormData, onNext, onBack, competitions }: any) {
-  // ...checkboxes de competencias...
+  const handleCompetitionChange = (competitionId: string, checked: boolean) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      competitions: checked ? [...prev.competitions, competitionId] : prev.competitions.filter((id: string) => id !== competitionId),
+    }));
+  };
+  const isValid = formData.competitions && formData.competitions.length > 0;
   return (
-    <div>
-      {/* Listado de competencias */}
-      <Button onClick={onBack}>Atrás</Button>
-      <Button onClick={onNext}>Siguiente</Button>
-    </div>
-  )
+    <form className="space-y-4" onSubmit={e => { e.preventDefault(); if (isValid) onNext(); }}>
+      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Competencias Disponibles *</h3>
+      <div className="space-y-2">
+        {competitions.length === 0 ? (
+          <p className="text-center text-gray-500 py-8">No hay competencias disponibles en este momento.</p>
+        ) : (
+          competitions.map((competition: any) => (
+            <div key={competition.id} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800/80 rounded">
+              <Checkbox
+                id={competition.id}
+                checked={formData.competitions.includes(competition.id)}
+                onCheckedChange={checked => handleCompetitionChange(competition.id, checked as boolean)}
+              />
+              <Label htmlFor={competition.id} className="text-base font-medium cursor-pointer">{competition.name}</Label>
+              <span className="text-xs text-gray-500 ml-2">{new Date(competition.date).toLocaleDateString("es-ES")}</span>
+              <span className="text-xs text-gray-500 ml-2">{competition.location}</span>
+            </div>
+          ))
+        )}
+      </div>
+      <div className="flex justify-between pt-2 gap-2">
+        <Button type="button" variant="outline" onClick={onBack} className="w-full sm:w-auto">Atrás</Button>
+        <Button type="submit" disabled={!isValid} className="w-full sm:w-auto px-8 btn-animate">Siguiente</Button>
+      </div>
+    </form>
+  );
 }
 
 // Paso 5: Revisión y confirmación
-function StepReview({ formData, onBack, onSubmit }: any) {
-  // ...mostrar resumen de datos...
+function StepReview({ formData, onBack, onSubmit, categories, competitions }: any) {
   return (
-    <div>
-      {/* Resumen de datos ingresados */}
-      <Button onClick={onBack}>Atrás</Button>
-      <Button onClick={onSubmit}>Confirmar y Enviar</Button>
+    <div className="space-y-6">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Revisión de Datos</h3>
+      <div className="space-y-2">
+        <div><span className="font-medium">Nombre:</span> {formData.firstName}</div>
+        <div><span className="font-medium">Apellido:</span> {formData.lastName}</div>
+        <div><span className="font-medium">Email:</span> {formData.email}</div>
+        <div><span className="font-medium">Teléfono:</span> {formData.phone}</div>
+        <div><span className="font-medium">Cédula:</span> {formData.cedula}</div>
+        <div><span className="font-medium">Dirección:</span> {formData.address}</div>
+        <div><span className="font-medium">Categorías:</span> {(formData.categories || []).map((id: string) => {
+          const cat = [...categories.male, ...categories.female].find((c: any) => c.id === id);
+          return cat ? cat.name : id;
+        }).join(", ")}</div>
+        <div><span className="font-medium">Competencias:</span> {(formData.competitions || []).map((id: string) => {
+          const comp = competitions.find((c: any) => c.id === id);
+          return comp ? comp.name : id;
+        }).join(", ")}</div>
+        <div><span className="font-medium">Cédula (Frente):</span> {formData.cedulaFront ? formData.cedulaFront.name : "No adjuntada"}</div>
+        <div><span className="font-medium">Cédula (Reverso):</span> {formData.cedulaBack ? formData.cedulaBack.name : "No adjuntada"}</div>
+      </div>
+      <div className="flex justify-between pt-2 gap-2">
+        <Button type="button" variant="outline" onClick={onBack} className="w-full sm:w-auto">Atrás</Button>
+        <Button type="button" onClick={onSubmit} className="w-full sm:w-auto px-8 btn-animate">Confirmar y Enviar</Button>
+      </div>
     </div>
-  )
+  );
 }
 
 // Barra de progreso visual
@@ -414,7 +604,7 @@ export default function RegisterPage() {
               {step === 1 && <StepDocuments formData={formData} setFormData={setFormData} onNext={() => setStep(2)} onBack={() => setStep(0)} />}
               {step === 2 && <StepCategory formData={formData} setFormData={setFormData} onNext={() => setStep(3)} onBack={() => setStep(1)} categories={categories} />}
               {step === 3 && <StepCompetition formData={formData} setFormData={setFormData} onNext={() => setStep(4)} onBack={() => setStep(2)} competitions={competitions} />}
-              {step === 4 && <StepReview formData={formData} onBack={() => setStep(3)} onSubmit={handleSubmit} />}
+              {step === 4 && <StepReview formData={formData} onBack={() => setStep(3)} onSubmit={handleSubmit} categories={categories} competitions={competitions} />}
             </div>
           </CardContent>
         </Card>
