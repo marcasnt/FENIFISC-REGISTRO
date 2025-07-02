@@ -558,6 +558,37 @@ export default function AdminPage() {
     XLSX.writeFile(wb, `competencias_fenifisc_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
+  // Nueva función para exportar atletas inscritos en una competencia
+  const exportRegisteredAthletesToExcel = (competition: Competition) => {
+    if (!competition || !competition.registered_athletes || !competition.registered_athletes.length) return;
+    const headers = [
+      "Nombre",
+      "Apellido",
+      "Email",
+      "Teléfono",
+      "Cédula",
+      "Dirección",
+      "Estado",
+      "Categorías",
+      "Fecha de Registro"
+    ];
+    const rows = competition.registered_athletes.map((a: Athlete) => [
+      a.first_name,
+      a.last_name,
+      a.email,
+      a.phone || "",
+      a.cedula,
+      a.address || "",
+      a.status,
+      (a.categories || []).join("; "),
+      formatDate(a.created_at)
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "AtletasInscritos");
+    XLSX.writeFile(wb, `atletas_competencia_${competition.name.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -1094,24 +1125,24 @@ export default function AdminPage() {
 
               {/* Acciones */}
               {selectedAthlete.status === "pending" && (
-                <div className="flex gap-2 pt-4 border-t">
+                <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
                   <Button
+                    className="w-full sm:w-auto"
                     onClick={() => {
                       handleApproveAthlete(selectedAthlete.id)
                       setShowAthleteDetailsDialog(false)
                     }}
-                    className="bg-green-600 hover:bg-green-700"
                   >
                     <UserCheck className="w-4 h-4 mr-2" />
                     Aprobar Atleta
                   </Button>
                   <Button
+                    className="w-full sm:w-auto text-red-600 hover:text-red-700 hover:bg-red-50"
                     variant="outline"
                     onClick={() => {
                       handleRejectAthlete(selectedAthlete.id)
                       setShowAthleteDetailsDialog(false)
                     }}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <UserX className="w-4 h-4 mr-2" />
                     Rechazar Atleta
@@ -1194,33 +1225,41 @@ export default function AdminPage() {
                 <div>
                   <h4 className="font-medium mb-2">Atletas Inscritos:</h4>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {selectedCompetition.registered_athletes.map((athlete, index) => {
-                      // Usar los datos completos del atleta directamente
-                      return (
-                        <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2 rounded bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-white">
-                          <div className="flex-1 min-w-0">
-                            <span className="font-medium text-gray-900 dark:text-white">{athlete.first_name} {athlete.last_name}</span>
-                            <span className="text-sm text-gray-600 dark:text-gray-300 ml-2">{athlete.email}</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">Estado: {athlete.status}</span>
-                          </div>
-                          <div className="flex flex-row flex-wrap items-center gap-2">
-                            {athlete.status === "approved" && (
-                              <span className="inline-block px-3 py-1 rounded-full bg-green-600 text-white text-xs font-semibold">Aprobado</span>
-                            )}
-                            {athlete.status === "rejected" && (
-                              <span className="inline-block px-3 py-1 rounded-full bg-red-600 text-white text-xs font-semibold">Rechazado</span>
-                            )}
-                          </div>
+                    {selectedCompetition.registered_athletes.map((athlete, index) => (
+                      <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2 rounded bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-white">
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium text-gray-900 dark:text-white">{athlete.first_name} {athlete.last_name}</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-300 ml-2">{athlete.email}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">Estado: {athlete.status}</span>
                         </div>
-                      );
-                    })}
+                        <div className="flex flex-row flex-wrap items-center gap-2">
+                          {athlete.status === "approved" && (
+                            <span className="inline-block px-3 py-1 rounded-full bg-green-600 text-white text-xs font-semibold">Aprobado</span>
+                          )}
+                          {athlete.status === "rejected" && (
+                            <span className="inline-block px-3 py-1 rounded-full bg-red-600 text-white text-xs font-semibold">Rechazado</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Botón de exportar Excel, responsivo y visible solo si hay atletas */}
+                  <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                    <Button
+                      className="w-full sm:w-auto"
+                      variant="outline"
+                      onClick={() => exportRegisteredAthletesToExcel(selectedCompetition)}
+                    >
+                      Exportar Atletas Inscritos (Excel)
+                    </Button>
                   </div>
                 </div>
               )}
 
               {/* Acciones */}
-              <div className="flex gap-2 pt-4 border-t">
+              <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
                 <Button
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     setShowCompetitionDetailsDialog(false)
                     handleEditCompetition(selectedCompetition)
