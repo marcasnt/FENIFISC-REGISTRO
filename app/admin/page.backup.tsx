@@ -1,7 +1,6 @@
 // Backup del archivo original de /admin/page.tsx
 // Fecha de backup: 2024-04-01
 // Si necesitas restaurar, reemplaza el contenido de page.tsx con este archivo.
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -253,11 +252,12 @@ export default function AdminPage() {
     try {
       const response = await fetch(`/api/athletes/${athlete.id}`)
       if (response.ok) {
-        const athleteData = await response.json()
-        setSelectedAthlete(athleteData.athlete)
+        const data = await response.json()
+        setSelectedAthlete(data.athlete)
         setShowAthleteDetailsDialog(true)
       } else {
-        throw new Error("Error al cargar detalles del atleta")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Error al cargar detalles")
       }
     } catch (error) {
       toast({
@@ -268,5 +268,1058 @@ export default function AdminPage() {
     }
   }
 
-  // ... existing code ... 
-} 
+  const handleCreateCompetition = async () => {
+    try {
+      if (
+        !newCompetition.name ||
+        !newCompetition.date ||
+        !newCompetition.location ||
+        !newCompetition.registration_deadline
+      ) {
+        toast({
+          title: "Error",
+          description: "Complete todos los campos obligatorios",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const response = await fetch("/api/competitions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newCompetition),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Competencia creada",
+          description: "La competencia ha sido creada exitosamente",
+        })
+        setNewCompetition({
+          name: "",
+          description: "",
+          date: "",
+          location: "",
+          registration_deadline: "",
+          max_registrations: 100,
+        })
+        setShowNewCompetitionDialog(false)
+        await loadData()
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Error al crear competencia")
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error al crear la competencia",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleEditCompetition = (competition: Competition) => {
+    setEditingCompetition({ ...competition })
+    setShowEditCompetitionDialog(true)
+  }
+
+  const handleSaveEditedCompetition = async () => {
+    if (!editingCompetition) return
+
+    try {
+      const response = await fetch(`/api/competitions/${editingCompetition.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editingCompetition.name,
+          description: editingCompetition.description,
+          date: editingCompetition.date,
+          location: editingCompetition.location,
+          registration_deadline: editingCompetition.registration_deadline,
+          max_registrations: editingCompetition.max_registrations,
+        }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Competencia actualizada",
+          description: "La competencia ha sido actualizada exitosamente",
+        })
+        setShowEditCompetitionDialog(false)
+        setEditingCompetition(null)
+        await loadData()
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Error al actualizar competencia")
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error al actualizar la competencia",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleViewCompetitionDetails = async (competition: Competition) => {
+    try {
+      const response = await fetch(`/api/competitions/${competition.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setSelectedCompetition(data.competition)
+        setShowCompetitionDetailsDialog(true)
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Error al cargar detalles")
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error al cargar detalles de la competencia",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDeleteCompetition = async (competitionId: string) => {
+    try {
+      const response = await fetch(`/api/competitions/${competitionId}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Competencia eliminada",
+          description: "La competencia ha sido eliminada exitosamente",
+        })
+        await loadData()
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Error al eliminar competencia")
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error al eliminar la competencia",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const getNextCompetition = () => {
+    const today = new Date()
+    const upcomingCompetitions = competitions
+      .filter((comp) => new Date(comp.date) > today)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+    return upcomingCompetitions[0] || null
+  }
+
+  const getDaysUntilNextCompetition = () => {
+    const nextComp = getNextCompetition()
+    if (!nextComp) return null
+
+    const today = new Date()
+    const compDate = new Date(nextComp.date)
+    const diffTime = compDate.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    return diffDays
+  }
+
+  const getCategoryName = (categoryId: string): string => {
+    return categoryNames[categoryId] || categoryId
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando panel administrativo...</p>
+        </div>
+      </div>
+    )
+  }
+
+  const pendingAthletes = athletes.filter((a) => a.status === "pending")
+  const approvedAthletes = athletes.filter((a) => a.status === "approved")
+  const nextCompetition = getNextCompetition()
+  const daysUntilNext = getDaysUntilNextCompetition()
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Image
+                src="/images/fenifisc-logo.webp"
+                alt="FENIFISC Logo"
+                width={50}
+                height={50}
+                className="rounded-lg"
+              />
+              <div>
+                <h1 className="text-xl font-bold text-blue-900">FENIFISC</h1>
+                <p className="text-sm text-gray-600">Panel Administrativo</p>
+              </div>
+            </div>
+            <Link href="/">
+              <Button variant="outline">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Volver al Inicio
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Estadísticas - Tarjetas clickeables */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card
+            className="cursor-pointer hover:shadow-lg transition-shadow hover:bg-gray-50"
+            onClick={() => setShowAllAthletesDialog(true)}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Atletas</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{athletes.length}</div>
+              <p className="text-xs text-muted-foreground">
+                {pendingAthletes.length} pendientes • {approvedAthletes.length} aprobados
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer hover:shadow-lg transition-shadow hover:bg-gray-50"
+            onClick={() => setShowAllCompetitionsDialog(true)}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Competencias</CardTitle>
+              <Trophy className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{competitions.length}</div>
+              <p className="text-xs text-muted-foreground">Competencias anunciadas</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Próxima Competencia</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{daysUntilNext !== null ? `${daysUntilNext} días` : "N/A"}</div>
+              <p className="text-xs text-muted-foreground">
+                {nextCompetition ? nextCompetition.name : "No hay competencias programadas"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Gestión de Atletas */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Gestión de Atletas</CardTitle>
+            <CardDescription>Administra las inscripciones de atletas</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {athletes.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No hay atletas registrados</p>
+              ) : (
+                athletes.slice(0, 5).map((athlete) => (
+                  <div
+                    key={athlete.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <h3 className="font-medium">
+                        {athlete.first_name} {athlete.last_name}
+                      </h3>
+                      <p className="text-sm text-gray-600">{athlete.email}</p>
+                      <p className="text-sm text-gray-500">Cédula: {athlete.cedula}</p>
+                      {athlete.categories && athlete.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {athlete.categories.map((categoryId, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {getCategoryName(categoryId)}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge
+                        variant={
+                          athlete.status === "approved"
+                            ? "default"
+                            : athlete.status === "pending"
+                              ? "secondary"
+                              : "destructive"
+                        }
+                      >
+                        {athlete.status === "approved"
+                          ? "Aprobado"
+                          : athlete.status === "pending"
+                            ? "Pendiente"
+                            : "Rechazado"}
+                      </Badge>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewAthleteDetails(athlete)}
+                        title="Ver detalles"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+
+                      {athlete.status === "pending" && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleApproveAthlete(athlete.id)}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            title="Aprobar atleta"
+                          >
+                            <UserCheck className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRejectAthlete(athlete.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Rechazar atleta"
+                          >
+                            <UserX className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent"
+                            title="Eliminar atleta"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Eliminar atleta?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta acción no se puede deshacer. Se eliminará permanentemente el atleta{" "}
+                              {athlete.first_name} {athlete.last_name} y todos sus datos asociados.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteAthlete(athlete.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Eliminar
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                ))
+              )}
+              {athletes.length > 5 && (
+                <div className="text-center pt-4">
+                  <Button variant="outline" onClick={() => setShowAllAthletesDialog(true)}>
+                    Ver todos los atletas ({athletes.length})
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Gestión de Competencias */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Gestión de Competencias</CardTitle>
+                <CardDescription>Administra las competencias de FENIFISC</CardDescription>
+              </div>
+              <Dialog open={showNewCompetitionDialog} onOpenChange={setShowNewCompetitionDialog}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nueva Competencia
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Crear Nueva Competencia</DialogTitle>
+                    <DialogDescription>Complete los datos de la nueva competencia</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nombre *</Label>
+                      <Input
+                        id="name"
+                        value={newCompetition.name}
+                        onChange={(e) => setNewCompetition((prev) => ({ ...prev, name: e.target.value }))}
+                        placeholder="Nombre de la competencia"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="date">Fecha *</Label>
+                      <Input
+                        id="date"
+                        type="date"
+                        value={newCompetition.date}
+                        onChange={(e) => setNewCompetition((prev) => ({ ...prev, date: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="location">Ubicación *</Label>
+                      <Input
+                        id="location"
+                        value={newCompetition.location}
+                        onChange={(e) => setNewCompetition((prev) => ({ ...prev, location: e.target.value }))}
+                        placeholder="Ciudad, País"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="deadline">Fecha límite de inscripción *</Label>
+                      <Input
+                        id="deadline"
+                        type="date"
+                        value={newCompetition.registration_deadline}
+                        onChange={(e) =>
+                          setNewCompetition((prev) => ({ ...prev, registration_deadline: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="max">Máximo de inscripciones</Label>
+                      <Input
+                        id="max"
+                        type="number"
+                        value={newCompetition.max_registrations}
+                        onChange={(e) =>
+                          setNewCompetition((prev) => ({ ...prev, max_registrations: Number.parseInt(e.target.value) }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Descripción</Label>
+                      <Textarea
+                        id="description"
+                        value={newCompetition.description}
+                        onChange={(e) => setNewCompetition((prev) => ({ ...prev, description: e.target.value }))}
+                        placeholder="Descripción de la competencia"
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setShowNewCompetitionDialog(false)}>
+                        Cancelar
+                      </Button>
+                      <Button onClick={handleCreateCompetition}>Crear Competencia</Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {competitions.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No hay competencias creadas</p>
+              ) : (
+                competitions.slice(0, 5).map((competition) => (
+                  <div
+                    key={competition.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <h3 className="font-medium">{competition.name}</h3>
+                      <p className="text-sm text-gray-600">{formatDate(competition.date)}</p>
+                      <p className="text-sm text-gray-500">{competition.location}</p>
+                      <p className="text-xs text-gray-400">
+                        Límite inscripción: {formatDate(competition.registration_deadline)}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewCompetitionDetails(competition)}
+                        title="Ver detalles"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditCompetition(competition)}
+                        title="Editar competencia"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent"
+                            title="Eliminar competencia"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Eliminar competencia?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta acción no se puede deshacer. Se eliminará permanentemente la competencia{" "}
+                              {competition.name} y todas las inscripciones asociadas.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteCompetition(competition.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Eliminar
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                ))
+              )}
+              {competitions.length > 5 && (
+                <div className="text-center pt-4">
+                  <Button variant="outline" onClick={() => setShowAllCompetitionsDialog(true)}>
+                    Ver todas las competencias ({competitions.length})
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Modal: Detalles del Atleta */}
+      <Dialog open={showAthleteDetailsDialog} onOpenChange={setShowAthleteDetailsDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Detalles del Atleta
+            </DialogTitle>
+          </DialogHeader>
+          {selectedAthlete && (
+            <div className="space-y-6">
+              {/* Información Personal */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Nombre:</span>
+                    <span>
+                      {selectedAthlete.first_name} {selectedAthlete.last_name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Email:</span>
+                    <span>{selectedAthlete.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Teléfono:</span>
+                    <span>{selectedAthlete.phone || "No proporcionado"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Cédula:</span>
+                    <span>{selectedAthlete.cedula}</span>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Home className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Dirección:</span>
+                    <span>{selectedAthlete.address || "No proporcionada"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Estado:</span>
+                    <Badge
+                      variant={
+                        selectedAthlete.status === "approved"
+                          ? "default"
+                          : selectedAthlete.status === "pending"
+                            ? "secondary"
+                            : "destructive"
+                      }
+                    >
+                      {selectedAthlete.status === "approved"
+                        ? "Aprobado"
+                        : selectedAthlete.status === "pending"
+                          ? "Pendiente"
+                          : "Rechazado"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Registrado:</span>
+                    <span>{formatDate(selectedAthlete.created_at)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Categorías */}
+              {selectedAthlete.categories && selectedAthlete.categories.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Categorías:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedAthlete.categories.map((categoryId, index) => (
+                      <Badge key={index} variant="outline">
+                        {getCategoryName(categoryId)}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Competencias */}
+              {selectedAthlete.competitions && selectedAthlete.competitions.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Competencias Inscritas:</h4>
+                  <div className="space-y-2">
+                    {selectedAthlete.competitions.map((comp, index) => (
+                      <div key={index} className="p-2 bg-gray-50 rounded">
+                        <span className="font-medium">{comp.name}</span>
+                        <span className="text-sm text-gray-600 ml-2">{formatDate(comp.date)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Documentos */}
+              <div>
+                <h4 className="font-medium mb-2">Documentos:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedAthlete.cedula_front_url && (
+                    <div>
+                      <p className="text-sm font-medium mb-2">Cédula (Frontal):</p>
+                      <Image
+                        src={selectedAthlete.cedula_front_url || "/placeholder.svg"}
+                        alt="Cédula frontal"
+                        width={200}
+                        height={120}
+                        className="border rounded"
+                      />
+                    </div>
+                  )}
+                  {selectedAthlete.cedula_back_url && (
+                    <div>
+                      <p className="text-sm font-medium mb-2">Cédula (Posterior):</p>
+                      <Image
+                        src={selectedAthlete.cedula_back_url || "/placeholder.svg"}
+                        alt="Cédula posterior"
+                        width={200}
+                        height={120}
+                        className="border rounded"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Acciones */}
+              {selectedAthlete.status === "pending" && (
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button
+                    onClick={() => {
+                      handleApproveAthlete(selectedAthlete.id)
+                      setShowAthleteDetailsDialog(false)
+                    }}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <UserCheck className="w-4 h-4 mr-2" />
+                    Aprobar Atleta
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      handleRejectAthlete(selectedAthlete.id)
+                      setShowAthleteDetailsDialog(false)
+                    }}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <UserX className="w-4 h-4 mr-2" />
+                    Rechazar Atleta
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Detalles de la Competencia */}
+      <Dialog open={showCompetitionDetailsDialog} onOpenChange={setShowCompetitionDetailsDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trophy className="w-5 h-5" />
+              Detalles de la Competencia
+            </DialogTitle>
+          </DialogHeader>
+          {selectedCompetition && (
+            <div className="space-y-6">
+              {/* Información de la Competencia */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div>
+                    <span className="font-medium">Nombre:</span>
+                    <p className="text-lg">{selectedCompetition.name}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Fecha:</span>
+                    <span>{formatDate(selectedCompetition.date)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Ubicación:</span>
+                    <span>{selectedCompetition.location}</span>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Límite de inscripción:</span>
+                    <span>{formatDate(selectedCompetition.registration_deadline)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Máximo inscripciones:</span>
+                    <span>{selectedCompetition.max_registrations}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Descripción */}
+              {selectedCompetition.description && (
+                <div>
+                  <h4 className="font-medium mb-2">Descripción:</h4>
+                  <p className="text-gray-700 bg-gray-50 p-3 rounded">{selectedCompetition.description}</p>
+                </div>
+              )}
+
+              {/* Estadísticas */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-blue-50 rounded">
+                  <div className="text-2xl font-bold text-blue-600">{selectedCompetition.registrations_count || 0}</div>
+                  <div className="text-sm text-blue-600">Atletas Inscritos</div>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded">
+                  <div className="text-2xl font-bold text-green-600">
+                    {selectedCompetition.max_registrations - (selectedCompetition.registrations_count || 0)}
+                  </div>
+                  <div className="text-sm text-green-600">Cupos Disponibles</div>
+                </div>
+              </div>
+
+              {/* Atletas Inscritos */}
+              {selectedCompetition.registered_athletes && selectedCompetition.registered_athletes.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Atletas Inscritos:</h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {selectedCompetition.registered_athletes.map((athlete, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span>
+                          {athlete.first_name} {athlete.last_name}
+                        </span>
+                        <span className="text-sm text-gray-600">{athlete.email}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Acciones */}
+              <div className="flex gap-2 pt-4 border-t">
+                <Button
+                  onClick={() => {
+                    setShowCompetitionDetailsDialog(false)
+                    handleEditCompetition(selectedCompetition)
+                  }}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Editar Competencia
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Editar Competencia */}
+      <Dialog open={showEditCompetitionDialog} onOpenChange={setShowEditCompetitionDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Competencia</DialogTitle>
+            <DialogDescription>Modifique los datos de la competencia</DialogDescription>
+          </DialogHeader>
+          {editingCompetition && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Nombre *</Label>
+                <Input
+                  id="edit-name"
+                  value={editingCompetition.name}
+                  onChange={(e) => setEditingCompetition((prev) => (prev ? { ...prev, name: e.target.value } : null))}
+                  placeholder="Nombre de la competencia"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-date">Fecha *</Label>
+                <Input
+                  id="edit-date"
+                  type="date"
+                  value={editingCompetition.date}
+                  onChange={(e) => setEditingCompetition((prev) => (prev ? { ...prev, date: e.target.value } : null))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-location">Ubicación *</Label>
+                <Input
+                  id="edit-location"
+                  value={editingCompetition.location}
+                  onChange={(e) =>
+                    setEditingCompetition((prev) => (prev ? { ...prev, location: e.target.value } : null))
+                  }
+                  placeholder="Ciudad, País"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-deadline">Fecha límite de inscripción *</Label>
+                <Input
+                  id="edit-deadline"
+                  type="date"
+                  value={editingCompetition.registration_deadline}
+                  onChange={(e) =>
+                    setEditingCompetition((prev) => (prev ? { ...prev, registration_deadline: e.target.value } : null))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-max">Máximo de inscripciones</Label>
+                <Input
+                  id="edit-max"
+                  type="number"
+                  value={editingCompetition.max_registrations}
+                  onChange={(e) =>
+                    setEditingCompetition((prev) =>
+                      prev ? { ...prev, max_registrations: Number.parseInt(e.target.value) } : null,
+                    )
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Descripción</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editingCompetition.description || ""}
+                  onChange={(e) =>
+                    setEditingCompetition((prev) => (prev ? { ...prev, description: e.target.value } : null))
+                  }
+                  placeholder="Descripción de la competencia"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowEditCompetitionDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveEditedCompetition}>Guardar Cambios</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Todos los Atletas */}
+      <Dialog open={showAllAthletesDialog} onOpenChange={setShowAllAthletesDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Todos los Atletas ({athletes.length})
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-4 top-4"
+              onClick={() => setShowAllAthletesDialog(false)}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </DialogHeader>
+          <div className="space-y-4">
+            {athletes.map((athlete) => (
+              <div
+                key={athlete.id}
+                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex-1">
+                  <h3 className="font-medium">
+                    {athlete.first_name} {athlete.last_name}
+                  </h3>
+                  <p className="text-sm text-gray-600">{athlete.email}</p>
+                  <p className="text-sm text-gray-500">Cédula: {athlete.cedula}</p>
+                  <p className="text-xs text-gray-400">Registrado: {formatDate(athlete.created_at)}</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge
+                    variant={
+                      athlete.status === "approved"
+                        ? "default"
+                        : athlete.status === "pending"
+                          ? "secondary"
+                          : "destructive"
+                    }
+                  >
+                    {athlete.status === "approved"
+                      ? "Aprobado"
+                      : athlete.status === "pending"
+                        ? "Pendiente"
+                        : "Rechazado"}
+                  </Badge>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowAllAthletesDialog(false)
+                      handleViewAthleteDetails(athlete)
+                    }}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+
+                  {athlete.status === "pending" && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleApproveAthlete(athlete.id)}
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      >
+                        <UserCheck className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRejectAthlete(athlete.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <UserX className="w-4 h-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Todas las Competencias */}
+      <Dialog open={showAllCompetitionsDialog} onOpenChange={setShowAllCompetitionsDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trophy className="w-5 h-5" />
+              Todas las Competencias ({competitions.length})
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-4 top-4"
+              onClick={() => setShowAllCompetitionsDialog(false)}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </DialogHeader>
+          <div className="space-y-4">
+            {competitions.map((competition) => (
+              <div
+                key={competition.id}
+                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex-1">
+                  <h3 className="font-medium">{competition.name}</h3>
+                  <p className="text-sm text-gray-600">{formatDate(competition.date)}</p>
+                  <p className="text-sm text-gray-500">{competition.location}</p>
+                  <p className="text-xs text-gray-400">
+                    Límite: {formatDate(competition.registration_deadline)} • Máx: {competition.max_registrations}{" "}
+                    atletas
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowAllCompetitionsDialog(false)
+                      handleViewCompetitionDetails(competition)
+                    }}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowAllCompetitionsDialog(false)
+                      handleEditCompetition(competition)
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

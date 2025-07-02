@@ -520,33 +520,6 @@ export default function CompetitionsPage() {
                 </div>
               </div>
 
-              {/* Atletas Inscritos */}
-              {selectedCompetition.registered_athletes && selectedCompetition.registered_athletes.length > 0 && (
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Atletas Inscritos</h4>
-                  <div className="max-h-40 overflow-y-auto space-y-2">
-                    {selectedCompetition.registered_athletes.map((athlete, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 rounded bg-gray-50 dark:bg-gray-800/80 text-gray-900 dark:text-white">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/80 rounded-full flex items-center justify-center mr-3">
-                            <span className="text-sm font-medium text-blue-600 dark:text-blue-200">
-                              {athlete.first_name?.[0]}
-                              {athlete.last_name?.[0]}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="font-medium text-gray-900 dark:text-white">
-                              {athlete.first_name} {athlete.last_name}
-                            </span>
-                          </div>
-                        </div>
-                        <span className="text-sm text-gray-600 dark:text-gray-200">{athlete.email}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Botones de Acción */}
               <div className="flex gap-3 pt-4 border-t">
                 {getCompetitionStatus(selectedCompetition).status === "open" && (
