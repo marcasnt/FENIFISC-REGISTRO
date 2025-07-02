@@ -531,34 +531,7 @@ export default function AdminPage() {
     XLSX.writeFile(wb, `atletas_fenifisc_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
-  // Función para exportar competencias a Excel
-  const exportCompetitionsToExcel = () => {
-    if (!competitions.length) return;
-    const headers = [
-      "Nombre",
-      "Descripción",
-      "Fecha",
-      "Ubicación",
-      "Límite de Inscripción",
-      "Máximo Inscripciones",
-      "Registrados"
-    ];
-    const rows = competitions.map((c) => [
-      c.name,
-      c.description || "",
-      formatDate(c.date),
-      c.location,
-      formatDate(c.registration_deadline),
-      c.max_registrations,
-      c.registrations_count || 0
-    ]);
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Competencias");
-    XLSX.writeFile(wb, `competencias_fenifisc_${new Date().toISOString().slice(0,10)}.xlsx`);
-  };
-
-  // Nueva función para exportar atletas inscritos en una competencia
+  // Función para exportar atletas inscritos en una competencia
   const exportRegisteredAthletesToExcel = (competition: Competition) => {
     if (!competition || !competition.registered_athletes || !competition.registered_athletes.length) return;
     const headers = [
@@ -583,7 +556,20 @@ export default function AdminPage() {
       (a.categories || []).join("; "),
       formatDate(a.created_at)
     ]);
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    // Agregar título y fecha como filas arriba
+    const titleRow = [
+      `Competencia: ${competition.name}`
+    ];
+    const dateRow = [
+      `Fecha: ${formatDate(competition.date)}`
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([
+      titleRow,
+      dateRow,
+      [], // fila vacía
+      headers,
+      ...rows
+    ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "AtletasInscritos");
     XLSX.writeFile(wb, `atletas_competencia_${competition.name.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -817,11 +803,6 @@ export default function AdminPage() {
 
           <TabsContent value="competitions">
             {/* Gestión de Competencias */}
-            <div className="flex justify-end mb-2">
-              <Button variant="outline" onClick={exportCompetitionsToExcel} className="text-blue-700 border-blue-400">
-                Exportar Competencias (Excel)
-              </Button>
-            </div>
             <Card className="bg-white/30 dark:bg-gray-800/60 backdrop-blur-md border border-white/40 dark:border-gray-700 shadow-lg w-full overflow-x-auto px-2 sm:px-6 py-4">
               <CardHeader>
                 <div className="flex items-center justify-between">
