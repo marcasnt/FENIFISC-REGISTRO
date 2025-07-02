@@ -546,15 +546,22 @@ export default function AdminPage() {
       "Fecha de Registro"
     ];
     const rows = competition.registered_athletes.map((a: Athlete) => [
-      a.first_name,
-      a.last_name,
-      a.email,
-      a.phone || "",
-      a.cedula,
-      a.address || "",
-      a.status,
-      (a.categories || []).join("; "),
-      formatDate(a.created_at)
+      a.first_name || "No proporcionado",
+      a.last_name || "No proporcionado",
+      a.email || "No proporcionado",
+      a.phone || "No proporcionado",
+      a.cedula || "No proporcionado",
+      a.address || "No proporcionado",
+      a.status || "No proporcionado",
+      (a.categories && a.categories.length > 0)
+        ? a.categories.map((catId: string) => {
+            const cat = categoryNames[catId];
+            return cat ? cat : catId;
+          }).join(", ")
+        : "No proporcionado",
+      (a.created_at && !isNaN(Date.parse(a.created_at)))
+        ? formatDate(a.created_at)
+        : "No proporcionado"
     ]);
     // Agregar título y fecha como filas arriba
     const titleRow = [
