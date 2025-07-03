@@ -119,10 +119,55 @@ function StepPersonalInfo({ formData, setFormData, onNext }: any) {
   );
 }
 
+// Utilidad para comprimir imágenes
+async function compressImage(file: File, maxWidth = 1024, quality = 0.7): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject('No se pudo obtener el contexto del canvas');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return reject('No se pudo comprimir la imagen');
+            const compressedFile = new File([blob], file.name, { type: 'image/jpeg' });
+            resolve(compressedFile);
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 // Paso 2: Subida de documentos
 function StepDocuments({ formData, setFormData, onNext, onBack }: any) {
-  const handleFileChange = (field: "cedulaFront" | "cedulaBack", file: File | null) => {
-    setFormData((prev: any) => ({ ...prev, [field]: file }));
+  const [compressing, setCompressing] = useState(false);
+  const handleFileChange = async (field: "cedulaFront" | "cedulaBack", file: File | null) => {
+    if (!file) {
+      setFormData((prev: any) => ({ ...prev, [field]: null }));
+      return;
+    }
+    setCompressing(true);
+    try {
+      const compressed = await compressImage(file);
+      setFormData((prev: any) => ({ ...prev, [field]: compressed }));
+    } catch (err) {
+      setFormData((prev: any) => ({ ...prev, [field]: file })); // fallback
+    } finally {
+      setCompressing(false);
+    }
   };
   const isValid = formData.cedulaFront && formData.cedulaBack;
   return (
@@ -136,8 +181,10 @@ function StepDocuments({ formData, setFormData, onNext, onBack }: any) {
             accept="image/*"
             onChange={e => handleFileChange("cedulaFront", e.target.files?.[0] || null)}
             required
+            disabled={compressing}
             className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200 dark:hover:file:bg-blue-800"
           />
+          {compressing && <span className="text-xs text-blue-600">Comprimiendo imagen...</span>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="cedulaBack">Cédula (Reverso) *</Label>
@@ -147,13 +194,15 @@ function StepDocuments({ formData, setFormData, onNext, onBack }: any) {
             accept="image/*"
             onChange={e => handleFileChange("cedulaBack", e.target.files?.[0] || null)}
             required
+            disabled={compressing}
             className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200 dark:hover:file:bg-blue-800"
           />
+          {compressing && <span className="text-xs text-blue-600">Comprimiendo imagen...</span>}
         </div>
       </div>
       <div className="flex justify-between pt-2 gap-2">
-        <Button type="button" variant="outline" onClick={onBack} className="w-full sm:w-auto">Atrás</Button>
-        <Button type="submit" disabled={!isValid} className="w-full sm:w-auto px-8 btn-animate">Siguiente</Button>
+        <Button type="button" variant="outline" onClick={onBack} className="w-full sm:w-auto" disabled={compressing}>Atrás</Button>
+        <Button type="submit" disabled={!isValid || compressing} className="w-full sm:w-auto px-8 btn-animate">Siguiente</Button>
       </div>
     </form>
   );
