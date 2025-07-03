@@ -543,7 +543,10 @@ export default function AdminPage() {
       "Dirección",
       "Estado",
       "Categorías",
-      "Fecha de Registro"
+      "Competencias",
+      "Fecha de Registro",
+      "URL Cédula (Frente)",
+      "URL Cédula (Reverso)"
     ];
     const rows = competition.registered_athletes.map((a: Athlete) => [
       a.first_name || "No proporcionado",
@@ -559,9 +562,14 @@ export default function AdminPage() {
             return cat ? cat : catId;
           }).join(", ")
         : "No proporcionado",
+      (a.competitions && a.competitions.length > 0)
+        ? a.competitions.map((comp: any) => comp.name || comp.id).join(", ")
+        : "No proporcionado",
       (a.created_at && !isNaN(Date.parse(a.created_at)))
         ? formatDate(a.created_at)
-        : "No proporcionado"
+        : "No proporcionado",
+      a.cedula_front_url || "No proporcionado",
+      a.cedula_back_url || "No proporcionado"
     ]);
     // Agregar título y fecha como filas arriba
     const titleRow = [
